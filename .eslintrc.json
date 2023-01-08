@@ -7,10 +7,7 @@
   "overrides": [
     {
       "extends": ["xo-typescript"],
-      "files": ["*.ts", "*.tsx"],
-      "rules": {
-        "indent": "off"
-      }
+      "files": ["*.ts", "*.tsx"]
     }
   ],
   "parserOptions": {
