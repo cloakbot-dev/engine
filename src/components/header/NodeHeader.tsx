@@ -1,4 +1,4 @@
-import {Divider, Flex, Space, Text} from '@mantine/core';
+import {Box, Divider, Flex, Space, Text, useMantineTheme} from '@mantine/core';
 import React from 'react';
 import {type Color} from '../../types';
 import {type TablerIcon} from '@tabler/icons';
@@ -18,6 +18,7 @@ export default function NodeHeader(
 	props: NodeHeaderProps,
 ) {
 	const c: Color = props.color ?? '#0352fc';
+	const theme = useMantineTheme();
 	return (
 		<Flex
 			w={'100%'}
@@ -44,7 +45,7 @@ export default function NodeHeader(
 								</Text>
 							</>
 						}
-						color={props.accentColor} mx={'sm'} style={{
+						color={theme.fn.rgba(props.accentColor ?? '#ffffff', 0.2)} mx={'sm'} style={{
 							flexGrow: 1,
 						}}/>
 
