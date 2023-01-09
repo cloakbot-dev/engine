@@ -1,4 +1,5 @@
-import { MantineProvider } from "@mantine/core"
+import { ColorSchemeProvider, MantineProvider } from "@mantine/core"
+import { useColorScheme } from "@mantine/hooks"
 
 export const parameters = {
   actions: { argTypesRegex: "^on[A-Z].*" },
@@ -11,15 +12,21 @@ export const parameters = {
 }
 
 export const decorators = [
-  (Story) => (
-    <MantineProvider
+  (Story) => {
+
+    const colorScheme = useColorScheme('dark', {
+      getInitialValueInEffect: false
+    })
+
+    return <MantineProvider
       withNormalizeCSS
       withGlobalStyles
       theme={{
-        colorScheme: "dark",
+        colorScheme: colorScheme,
         fontFamily: "monospace"
       }}
     >
-      <Story />
-    </MantineProvider>)
+      <ColorSchemeProvider colorScheme={colorScheme}>
+      <Story /></ColorSchemeProvider>
+  </MantineProvider>}
 ]
