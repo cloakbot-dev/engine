@@ -1,1 +1,6 @@
-console.log('Hello World!');
+import 'reflect-metadata';
+import {NodeData} from './common/classes/Node';
+import {Engine} from './common/Engine';
+
+const engine = new Engine();
+engine.addNode(new NodeData('test'));

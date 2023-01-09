@@ -1,7 +1,5 @@
-import {Input, Textarea} from '@mantine/core';
 import {type ComponentStory, type ComponentMeta} from '@storybook/react';
 import {IconInfoCircle} from '@tabler/icons';
-import {type NodeAttributeController} from '../components/attribute/NodeAttribute';
 import Node from '../components/Node';
 
 const story: ComponentMeta<typeof Node> = {

@@ -1,4 +1,4 @@
-import {Box, Divider, Flex, Space, Text, useMantineTheme} from '@mantine/core';
+import {Divider, Flex, Space, Text, useMantineTheme} from '@mantine/core';
 import React from 'react';
 import {type Color} from '../../types';
 import {type TablerIcon} from '@tabler/icons';
