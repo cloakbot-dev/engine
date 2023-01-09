@@ -24,3 +24,49 @@ EmptyNode.args = {
 		icon: IconInfoCircle,
 	},
 };
+
+export const Inputs = NodeTemplate.bind({});
+Inputs.args = {
+	...NodeTemplate.args,
+	header: {
+		title: 'Inputs',
+		color: '#7303fc',
+		accentColor: '#ffffff',
+		icon: IconInfoCircle,
+
+		leftPort: {},
+		rightPort: {},
+	},
+	inputs: [
+		{
+			name: 'execution',
+			label: 'Execution',
+			port: {
+				type: 'execution',
+			},
+		},
+		{
+			name: 'data',
+			label: 'Data',
+			port: {
+				type: 'data',
+			},
+		},
+		{
+			name: 'execution-connected',
+			label: '(Connected) Execution',
+			port: {
+				type: 'execution',
+				connected: true,
+			},
+		},
+		{
+			name: 'data',
+			label: '(Connected) Data',
+			port: {
+				type: 'data',
+				connected: true,
+			},
+		},
+	],
+};
