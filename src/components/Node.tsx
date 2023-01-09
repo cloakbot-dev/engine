@@ -8,7 +8,7 @@ export type NodeProps = {
 } & Partial<NodeBodyProps>;
 
 export default function Node(props: NodeProps) {
-	return <Paper withBorder shadow={'md'} radius={'md'} sx={_ => ({
+	return <Paper withBorder shadow={'md'} radius={'lg'} sx={_ => ({
 		overflow: 'hidden',
 	})}>
 		<NodeHeader {...props.header} />

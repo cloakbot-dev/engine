@@ -18,12 +18,14 @@ export default function NodeHeader(
 	props: NodeHeaderProps,
 ) {
 	const c: Color = props.color ?? '#0352fc';
+	const ac: Color = props.accentColor ?? '#ffffff';
 	const theme = useMantineTheme();
 	return (
 		<Flex
 			w={'100%'}
 			justify={'stretch'}
 			sx={theme => ({
+				borderBottom: `1px solid ${c ?? 'transparent'}`,
 				userSelect: 'none',
 				background: theme.fn.linearGradient(60, c, theme.fn.rgba(c, 0.1)),
 			})}>
@@ -36,16 +38,16 @@ export default function NodeHeader(
 						label={
 							<>
 								{props.icon && React.createElement(props.icon, {
-									color: props.accentColor ?? '#ffffff',
+									color: ac,
 									size: 20,
 								})}
 								<Space w={'xs'} />
-								<Text fz={'lg'} color={props.accentColor ?? '#ffffff'}>
+								<Text fz={'lg'} color={ac}>
 									{props.title}
 								</Text>
 							</>
 						}
-						color={theme.fn.rgba(props.accentColor ?? '#ffffff', 0.2)} mx={'sm'} style={{
+						color={theme.fn.rgba(ac, 0.2)} mx={'sm'} style={{
 							flexGrow: 1,
 						}}/>
 
