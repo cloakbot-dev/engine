@@ -1,6 +1,13 @@
+import 'reflect-metadata';
 import {type ComponentStory, type ComponentMeta} from '@storybook/react';
-import {IconInfoCircle} from '@tabler/icons';
-import Node from '../components/Node';
+import {Attribute} from '../common/classes/Attribute';
+import {NodeData} from '../common/classes/Node';
+import {Port} from '../common/classes/Port';
+import {Engine} from '../common/Engine';
+import {NumberValue} from '../common/values/NumberValue';
+import Node, {type NodeProps} from '../components/Node';
+import {StringValue} from '../common/values/StringValue';
+import {StringController} from '../common/controllers/StringController';
 
 const story: ComponentMeta<typeof Node> = {
 	title: 'Node',
@@ -8,100 +15,22 @@ const story: ComponentMeta<typeof Node> = {
 };
 export default story;
 
-// Template for the Node component
-const NodeTemplate: ComponentStory<typeof Node> = args => <Node {...args} />;
+const node = new NodeData('math')
+	.addAttribute(new Attribute<StringValue<false>>('method', 'input')
+		.setController(new StringController(new StringValue('Add'))))
+	.addAttribute(new Attribute('a', 'input').setPort(new Port('data', new NumberValue(0)).setNullable(true)))
+	.addAttribute(new Attribute('b', 'input').setPort(new Port('data', new NumberValue(0))))
+	.addAttribute(new Attribute('result', 'output').setPort(new Port('data', new NumberValue(0))))
+	.addInputExecution();
 
-// Stories
-export const EmptyNode = NodeTemplate.bind({});
-EmptyNode.args = {
-	...NodeTemplate.args,
-	header: {
-		title: 'Empty',
-		color: '#7303fc',
-		accentColor: '#ffffff',
-		icon: IconInfoCircle,
-	},
-};
+const engine = new Engine();
+const id = engine.addNode(node);
 
-export const Inputs = NodeTemplate.bind({});
-Inputs.args = {
-	...NodeTemplate.args,
-	header: {
-		title: 'Inputs',
-		color: '#7303fc',
-		accentColor: '#ffffff',
-		icon: IconInfoCircle,
+console.log(engine.nodes.size);
 
-		leftPort: {},
-		rightPort: {},
-	},
-	inputs: [
-		{
-			name: 'execution',
-			label: 'Execution',
-			port: {
-				type: 'execution',
-			},
-		},
-		{
-			name: 'data',
-			label: 'Data',
-			port: {
-				type: 'data',
-				datatype: 'string',
-			},
-		},
-		{
-			name: 'data',
-			label: 'Nullable Data',
-			port: {
-				type: 'data',
-				isNullable: true,
-				datatype: 'string',
-			},
-		},
-		{
-			name: 'data',
-			label: 'Array Data',
-			port: {
-				type: 'data',
-				isArray: true,
-				datatype: 'string',
-			},
-		},
-		{
-			name: 'execution-connected',
-			label: '(Connected) Execution',
-			port: {
-				type: 'execution',
-				connected: true,
-			},
-		},
-		{
-			name: 'data',
-			label: '(Connected) Data',
-			port: {
-				type: 'data',
-				connected: true,
-			},
-		},
-		{
-			name: 'data',
-			label: '(Connected) Nullable Data',
-			port: {
-				type: 'data',
-				connected: true,
-				isNullable: true,
-			},
-		},
-		{
-			name: 'data',
-			label: '(Connected) Array Data',
-			port: {
-				type: 'data',
-				connected: true,
-				isArray: true,
-			},
-		},
-	],
+const NodeTemplate: ComponentStory<typeof Node> = (args: NodeProps) => <Node {...args} />;
+
+export const MathNode = NodeTemplate.bind({});
+MathNode.args = {
+	node: engine.nodes.get(id),
 };

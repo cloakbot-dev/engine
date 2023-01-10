@@ -1,3 +1,6 @@
+import {type NodeData} from './common/classes/Node';
+import {type Value} from './common/classes/Value';
+
 export type Connection = {
 	fromId: string;
 	toId: string;
@@ -6,7 +9,7 @@ export type Connection = {
 	toPort: string;
 };
 
-export type Node<T> = {
+export type NodeWrapper<T extends NodeData> = {
 	id: string;
 	position: {
 		x: number;
@@ -24,4 +27,5 @@ export type UnknownJson = string | number | boolean | undefined | UnknownJson[] 
 export type ClassConstructor<T> = new (...args: any[]) => T;
 export type Color = `#${string}`;
 export type PortTypes = 'execution' | 'data';
-export type DataType = Lowercase<string>;
+export type DataType = Value<any>;
+export type NonArrayDataType = Value<any, false>;

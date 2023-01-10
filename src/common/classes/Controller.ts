@@ -1,17 +1,29 @@
+/* eslint-disable @typescript-eslint/parameter-properties */
 import {type ReactNode} from 'react';
+import {type NonArrayDataType, type ClassConstructor} from '../../types';
 
-export class Controller<T, Props> {
+export class Controller<T extends NonArrayDataType, Props> {
 	value: T;
+	props?: Props = undefined;
 
-	constructor(defaultValue: T) {
+	readonly type: ClassConstructor<T>;
+
+	constructor(type: ClassConstructor<T>, defaultValue: T) {
 		this.value = defaultValue;
+		this.type = type;
+	}
+
+	setProps(props: Props) {
+		this.props = props;
+		return this;
 	}
 
 	update(value: T) {
+		console.log(value);
 		this.value = value;
 	}
 
-	render(_?: Props): ReactNode {
+	render(): ReactNode {
 		return null;
 	}
 }

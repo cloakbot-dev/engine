@@ -1,17 +1,20 @@
-import React from 'react';
-import NodeHeader, {type NodeHeaderProps} from './header/NodeHeader';
 import {Paper} from '@mantine/core';
-import NodeBody, {type NodeBodyProps} from './body/NodeBody';
+import React from 'react';
+import {type NodeData} from '../common/classes/Node';
+import {type NodeWrapper} from '../types';
+import NodeBody from './NodeBody';
+import NodeHeader from './NodeHeader';
 
 export type NodeProps = {
-	header: NodeHeaderProps;
-} & Partial<NodeBodyProps>;
+	node: NodeWrapper<NodeData>;
+};
 
 export default function Node(props: NodeProps) {
-	return <Paper withBorder shadow={'md'} radius={'lg'} sx={_ => ({
-		overflow: 'hidden',
-	})}>
-		<NodeHeader {...props.header} />
-		<NodeBody {...props} />
-	</Paper>;
+	return (
+		<Paper radius={'lg'} shadow={'md'} withBorder sx={_ => ({overflow: 'hidden'})}>
+			<NodeHeader node={props.node} />
+			<NodeBody node={props.node} />
+		</Paper>
+	);
 }
+

@@ -1,47 +1,43 @@
-import {instanceToPlain, plainToInstance} from 'class-transformer';
-import {compress, decompress} from 'compressed-json';
+import {instanceToPlain} from 'class-transformer';
+
+/* eslint-disable new-cap */
+import {plainToInstance, Type} from 'class-transformer';
 import {type NodeData} from './classes/Node';
-import {type Node, type Connection} from '../types';
+import {type Connection} from '../types';
 import {v4} from 'uuid';
 import _ from 'lodash';
-import {StringController} from './controllers/StringController';
+import {NodeWrapperClass} from './classes/NodeWrapper';
+import {compress, decompress} from 'compressed-json';
 
 export class Engine {
 	static load(string: string) {
 		return plainToInstance(Engine, decompress(JSON.parse(string)));
 	}
 
-	nodes: Record<string, Node<NodeData>> = {};
+	@Type(() => NodeWrapperClass<NodeData>) nodes = new Map<string, NodeWrapperClass<NodeData>>();
 	connections: Connection[] = [];
-	controllers = {
-		string: StringController,
-	};
-
-	constructor() {
-		this.nodes = {};
-		this.connections = [];
-	}
 
 	serialize() {
 		const string = JSON.stringify(compress(instanceToPlain(this)));
 		return (string);
 	}
 
-	addNode(node: NodeData, options?: Partial<Omit<Node<NodeData>, 'data'>>) {
+	addNode(node: NodeData, options?: Partial<Omit<NodeWrapperClass<NodeData>, 'data'>>) {
 		const id = options?.id ?? v4();
-		this.nodes[id] = {
+		this.nodes.set(id, {
 			id,
 			position: options?.position ?? {x: 0, y: 0},
 			selected: options?.selected ?? false,
 			locked: options?.locked ?? false,
 			immortal: options?.immortal ?? false,
 			data: node,
-		};
+		});
+		return id;
 	}
 
 	isCircular(fromId: string, toId: string): boolean {
-		const from = this.nodes[fromId];
-		const to = this.nodes[toId];
+		const from = this.nodes.get(fromId);
+		const to = this.nodes.get(toId);
 
 		if (!from) {
 			throw new Error(`Node with id ${fromId} does not exist`);
@@ -71,8 +67,8 @@ export class Engine {
 	}
 
 	canConnect(fromId: string, toId: string, fromPortName: Lowercase<string>, toPortName: Lowercase<string>) {
-		const from = this.nodes[fromId];
-		const to = this.nodes[toId];
+		const from = this.nodes.get(fromId);
+		const to = this.nodes.get(toId);
 
 		if (!from) {
 			throw new Error(`Node with id ${fromId} does not exist`);
@@ -105,12 +101,14 @@ export class Engine {
 			throw new Error('Cannot connect ports of different types');
 		}
 
-		if (fromPort.port.datatype !== toPort.port.datatype) {
-			throw new Error('Cannot connect ports of different datatypes');
-		}
+		if (fromPort.port.datatype !== undefined && toPort.port.datatype !== undefined) {
+			if (fromPort.port.datatype.type !== toPort.port.datatype.type) {
+				throw new Error('Cannot connect ports of different datatypes');
+			}
 
-		if (fromPort.port.isArray !== toPort.port.isArray) {
-			throw new Error('Cannot connect an array port and a non-array port');
+			if (fromPort.port.datatype.isArray !== toPort.port.datatype.isArray) {
+				throw new Error('Cannot connect an array port and a non-array port');
+			}
 		}
 
 		if (this.isCircular(fromId, toId)) {

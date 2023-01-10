@@ -1,20 +1,26 @@
-import {type DataType, type PortTypes} from '../../types';
+/* eslint-disable new-cap */
+/* eslint-disable @typescript-eslint/member-ordering */
+import {Type} from 'class-transformer';
+import {type Color, type DataType, type PortTypes} from '../../types';
 
-export class Port<IsArray extends boolean = false, IsNullable extends boolean = false> {
-	isArray: IsArray;
-	isNullable: IsNullable;
-	constructor(readonly type: PortTypes, readonly datatype: DataType) {
-		this.isArray = false as IsArray;
-		this.isNullable = false as IsNullable;
+export class Port<IsNullable extends boolean = false, Type extends PortTypes = PortTypes> {
+	nullable: IsNullable;
+	color: Color = '#ffffff';
+	@Type(() => Type) type: Type;
+	readonly datatype: Type extends 'execution' ? undefined : DataType;
+
+	constructor(type: Type, datatype: Type extends 'execution' ? undefined : DataType) {
+		this.nullable = false as IsNullable;
+		this.type = type;
+		this.datatype = datatype;
+	}
+
+	setColor(c: Color) {
+		this.color = c;
 	}
 
 	setNullable<T extends boolean>(nullable: T) {
-		this.isNullable = nullable as unknown as IsNullable;
-		return this as unknown as Port<IsArray, T>;
-	}
-
-	setArray<T extends boolean>(array: T) {
-		this.isArray = array as unknown as IsArray;
-		return this as unknown as Port<T, IsNullable>;
+		this.nullable = nullable as unknown as IsNullable;
+		return this as unknown as Port<T>;
 	}
 }
