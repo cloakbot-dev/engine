@@ -18,9 +18,10 @@ export type Node<T> = {
 	data: T;
 };
 
+// eslint-disable-next-line @typescript-eslint/naming-convention
+export type IO = 'input' | 'output';
 export type UnknownJson = string | number | boolean | undefined | UnknownJson[] | {[key: string]: UnknownJson};
 export type ClassConstructor<T> = new (...args: any[]) => T;
 export type Color = `#${string}`;
 export type PortTypes = 'execution' | 'data';
-// eslint-disable-next-line @typescript-eslint/naming-convention
-export type IO = 'input' | 'output';
+export type DataType = Lowercase<string>;

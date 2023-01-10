@@ -10,11 +10,11 @@ export class Engine {
 		return plainToInstance(Engine, decompress(JSON.parse(string)));
 	}
 
-	nodes: Array<Node<NodeData>> = [];
+	nodes: Record<string, Node<NodeData>> = {};
 	connections: Connection[] = [];
 
 	constructor() {
-		this.nodes = [];
+		this.nodes = {};
 		this.connections = [];
 	}
 
@@ -24,26 +24,101 @@ export class Engine {
 	}
 
 	addNode(node: NodeData, options?: Partial<Omit<Node<NodeData>, 'data'>>) {
-		this.nodes.push({
-			id: v4(),
+		const id = options?.id ?? v4();
+		this.nodes[id] = {
+			id,
 			position: options?.position ?? {x: 0, y: 0},
 			selected: options?.selected ?? false,
 			locked: options?.locked ?? false,
 			immortal: options?.immortal ?? false,
 			data: node,
-		});
+		};
 	}
 
-	connect(fromId: string, toId: string, fromPort: string, toPort: string) {
-		const fromNode = this.nodes.find((node: Node<any>) => node.id === fromId);
-		const toNode = this.nodes.find((node: Node<any>) => node.id === toId);
+	isCircular(fromId: string, toId: string): boolean {
+		const from = this.nodes[fromId];
+		const to = this.nodes[toId];
 
-		if (!fromNode) {
+		if (!from) {
 			throw new Error(`Node with id ${fromId} does not exist`);
 		}
 
-		if (!toNode) {
+		if (!to) {
 			throw new Error(`Node with id ${toId} does not exist`);
+		}
+
+		const outputConnections = this.connections.filter((connection: Connection) => connection.fromId === toId);
+
+		if (outputConnections.length === 0) {
+			return false;
+		}
+
+		if (outputConnections.some((connection: Connection) => connection.toId === fromId)) {
+			return true;
+		}
+
+		for (const connection of outputConnections) {
+			if (this.isCircular(fromId, connection.toId)) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	canConnect(fromId: string, toId: string, fromPortName: string, toPortName: string) {
+		const from = this.nodes[fromId];
+		const to = this.nodes[toId];
+
+		if (!from) {
+			throw new Error(`Node with id ${fromId} does not exist`);
+		}
+
+		if (!to) {
+			throw new Error(`Node with id ${toId} does not exist`);
+		}
+
+		const fromPort = from.data.attributes[fromPortName];
+		const toPort = to.data.attributes[toPortName];
+
+		if (!fromPort || fromPort.port === undefined) {
+			throw new Error(`Attribute ${fromPortName} does not exist or does not have a connectable port`);
+		}
+
+		if (!toPort || toPort.port === undefined) {
+			throw new Error(`Attribute ${toPortName} does not exist or does not have a connectable port`);
+		}
+
+		if (fromId === toId) {
+			throw new Error('Cannot connect a node to itself');
+		}
+
+		if (fromPort.direction === toPort.direction) {
+			throw new Error('Cannot connect ports of the same direction');
+		}
+
+		if (fromPort.port.type !== toPort.port.type) {
+			throw new Error('Cannot connect ports of different types');
+		}
+
+		if (fromPort.port.datatype !== toPort.port.datatype) {
+			throw new Error('Cannot connect ports of different datatypes');
+		}
+
+		if (fromPort.port.array !== toPort.port.array) {
+			throw new Error('Cannot connect an array port and a non-array port');
+		}
+
+		if (this.isCircular(fromId, toId)) {
+			throw new Error('Cannot connect nodes in a circular fashion');
+		}
+
+		return true;
+	}
+
+	connect(fromId: string, toId: string, fromPort: string, toPort: string) {
+		if (!this.canConnect(fromId, toId, fromPort, toPort)) {
+			throw new Error('Cannot connect ports');
 		}
 
 		this.connections.push({
