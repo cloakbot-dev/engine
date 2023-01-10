@@ -4,6 +4,7 @@ import {type NodeData} from './classes/Node';
 import {type Node, type Connection} from '../types';
 import {v4} from 'uuid';
 import _ from 'lodash';
+import {StringController} from './controllers/StringController';
 
 export class Engine {
 	static load(string: string) {
@@ -12,6 +13,9 @@ export class Engine {
 
 	nodes: Record<string, Node<NodeData>> = {};
 	connections: Connection[] = [];
+	controllers = {
+		string: StringController,
+	};
 
 	constructor() {
 		this.nodes = {};
@@ -66,7 +70,7 @@ export class Engine {
 		return false;
 	}
 
-	canConnect(fromId: string, toId: string, fromPortName: string, toPortName: string) {
+	canConnect(fromId: string, toId: string, fromPortName: Lowercase<string>, toPortName: Lowercase<string>) {
 		const from = this.nodes[fromId];
 		const to = this.nodes[toId];
 
@@ -105,7 +109,7 @@ export class Engine {
 			throw new Error('Cannot connect ports of different datatypes');
 		}
 
-		if (fromPort.port.array !== toPort.port.array) {
+		if (fromPort.port.isArray !== toPort.port.isArray) {
 			throw new Error('Cannot connect an array port and a non-array port');
 		}
 
@@ -116,7 +120,7 @@ export class Engine {
 		return true;
 	}
 
-	connect(fromId: string, toId: string, fromPort: string, toPort: string) {
+	connect(fromId: string, toId: string, fromPort: Lowercase<string>, toPort: Lowercase<string>) {
 		if (!this.canConnect(fromId, toId, fromPort, toPort)) {
 			throw new Error('Cannot connect ports');
 		}
@@ -129,7 +133,7 @@ export class Engine {
 		});
 	}
 
-	disconnect(fromId: string, toId: string, fromPort: string, toPort: string) {
+	disconnect(fromId: string, toId: string, fromPort: Lowercase<string>, toPort: Lowercase<string>) {
 		const index = this.connections.findIndex(
 			(connection: Connection) => _.isEqual(connection, {fromId, toId, fromPort, toPort}),
 		);

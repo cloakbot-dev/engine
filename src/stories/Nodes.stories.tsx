@@ -56,7 +56,7 @@ Inputs.args = {
 			label: 'Nullable Data',
 			port: {
 				type: 'data',
-				nullable: true,
+				isNullable: true,
 				datatype: 'string',
 			},
 		},
@@ -65,7 +65,7 @@ Inputs.args = {
 			label: 'Array Data',
 			port: {
 				type: 'data',
-				array: true,
+				isArray: true,
 				datatype: 'string',
 			},
 		},
@@ -91,7 +91,7 @@ Inputs.args = {
 			port: {
 				type: 'data',
 				connected: true,
-				nullable: true,
+				isNullable: true,
 			},
 		},
 		{
@@ -100,7 +100,7 @@ Inputs.args = {
 			port: {
 				type: 'data',
 				connected: true,
-				array: true,
+				isArray: true,
 			},
 		},
 	],

@@ -9,8 +9,8 @@ export type PortProps = {
 	datatype?: string;
 	type?: PortTypes;
 	color?: Color;
-	nullable?: boolean;
-	array?: boolean;
+	isNullable?: boolean;
+	isArray?: boolean;
 };
 
 export default function Port(props: PortProps) {
@@ -21,10 +21,10 @@ export default function Port(props: PortProps) {
 	const {colorScheme} = useMantineColorScheme();
 	const type = props.type ?? 'data';
 	const fallbackColor = colorScheme === 'dark' ? '#ffffff' : '#000000';
-	const icon = type === 'execution' ? IconArrowBadgeRight : props.array ? IconDotsCircleHorizontal : (props.nullable ? IconQuestionCircle : IconCircle);
+	const icon = type === 'execution' ? IconArrowBadgeRight : props.isArray ? IconDotsCircleHorizontal : (props.isNullable ? IconQuestionCircle : IconCircle);
 
 	return (
-		<Tooltip label={(props.datatype ?? '') + (props.nullable && !props.array ? '?' : '') + (props.array ? '[]' : '')} opened={props.datatype ? undefined : false} withArrow >
+		<Tooltip label={(props.datatype ?? '') + (props.isNullable && !props.isArray ? '?' : '') + (props.isArray ? '[]' : '')} opened={props.datatype ? undefined : false} withArrow >
 			<Flex align={'center'} justify={'center'} ref={ref} w={'xl'	}>
 				{
 					React.createElement(icon, {

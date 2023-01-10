@@ -1,8 +1,5 @@
 import 'reflect-metadata';
+import {Attribute} from './common/classes/Attribute';
 import {NodeData} from './common/classes/Node';
-import {Engine} from './common/Engine';
 
-const engine = new Engine();
-engine.addNode(new NodeData('test'));
-
-engine.canConnect('test', 'test', 'test', 'test');
+const node = new NodeData('math').addAttribute(new Attribute('abc', 'output')).addAttribute(new Attribute('def', 'output'));
