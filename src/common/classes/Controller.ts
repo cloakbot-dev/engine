@@ -1,16 +1,29 @@
-/* eslint-disable @typescript-eslint/parameter-properties */
+import {SelectController} from './../controllers/SelectController';
+/* eslint-disable new-cap */
+
+import {Type} from 'class-transformer';
 import {type ReactNode} from 'react';
 import {type NonArrayDataType, type ClassConstructor} from '../../types';
+import {StringValue} from '../values/StringValue';
+import {Value} from './Value';
 
 export class Controller<T extends NonArrayDataType, Props> {
-	value: T;
+	@Type(() => Value, {
+		discriminator: {
+			property: '__type',
+			subTypes: [
+				{value: StringValue, name: 'StringValue'},
+			],
+		},
+	}) value: T;
+
 	props?: Props = undefined;
 
-	readonly type: ClassConstructor<T>;
+	readonly type: T['type'];
 
-	constructor(type: ClassConstructor<T>, defaultValue: T) {
+	constructor(defaultValue: T) {
 		this.value = defaultValue;
-		this.type = type;
+		this.type = defaultValue.type;
 	}
 
 	setProps(props: Props) {

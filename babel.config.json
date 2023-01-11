@@ -1,0 +1,17 @@
+{
+  "sourceType": "unambiguous",
+  "ignore": ["**/*.d.ts", "node_modules/*"],
+  "presets": [
+    [
+      "@babel/preset-env",
+      {
+        "targets": {
+          "chrome": 100,
+          "ie": 11
+        }
+      }
+    ],
+    "@babel/preset-typescript",
+    "@babel/preset-react"
+  ]
+}

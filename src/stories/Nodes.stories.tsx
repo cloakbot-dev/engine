@@ -8,6 +8,8 @@ import {NumberValue} from '../common/values/NumberValue';
 import Node, {type NodeProps} from '../components/Node';
 import {StringValue} from '../common/values/StringValue';
 import {StringController} from '../common/controllers/StringController';
+import React from 'react';
+import {SelectController} from '../common/controllers/SelectController';
 
 const story: ComponentMeta<typeof Node> = {
 	title: 'Node',
@@ -17,8 +19,15 @@ export default story;
 
 const node = new NodeData('math')
 	.addAttribute(new Attribute<StringValue<false>>('method', 'input')
-		.setController(new StringController(new StringValue('Add'))))
-	.addAttribute(new Attribute('a', 'input').setPort(new Port('data', new NumberValue(0)).setNullable(true)))
+		.setController(new SelectController([{
+			label: 'Add',
+			value: new StringValue('add'),
+		},
+		{
+			label: 'Subtract',
+			value: new StringValue('subtract'),
+		}])))
+	.addAttribute(new Attribute('a', 'input').setPort(new Port('data', new NumberValue(0))))
 	.addAttribute(new Attribute('b', 'input').setPort(new Port('data', new NumberValue(0))))
 	.addAttribute(new Attribute('result', 'output').setPort(new Port('data', new NumberValue(0))))
 	.addInputExecution();
@@ -33,4 +42,5 @@ const NodeTemplate: ComponentStory<typeof Node> = (args: NodeProps) => <Node {..
 export const MathNode = NodeTemplate.bind({});
 MathNode.args = {
 	node: engine.nodes.get(id),
+	engine,
 };

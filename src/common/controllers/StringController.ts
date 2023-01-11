@@ -1,11 +1,11 @@
 import {Input, type InputProps} from '@mantine/core';
 import React from 'react';
-import {type ChangeEvent, type ReactNode} from 'react';
+import {type ReactNode} from 'react';
 import {Controller} from '../classes/Controller';
 import {StringValue} from '../values/StringValue';
 export class StringController extends Controller<StringValue<false>, InputProps> {
-	constructor(defaultValue = new StringValue('').setArray(false)) {
-		super(StringValue, defaultValue);
+	constructor(defaultValue: StringValue<false> = StringValue.default()) {
+		super(defaultValue);
 	}
 
 	override render(): ReactNode {

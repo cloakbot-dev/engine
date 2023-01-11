@@ -78,8 +78,8 @@ export class Engine {
 			throw new Error(`Node with id ${toId} does not exist`);
 		}
 
-		const fromPort = from.data.attributes[fromPortName];
-		const toPort = to.data.attributes[toPortName];
+		const fromPort = from.data.attributes.get(fromPortName);
+		const toPort = to.data.attributes.get(toPortName);
 
 		if (!fromPort || fromPort.port === undefined) {
 			throw new Error(`Attribute ${fromPortName} does not exist or does not have a connectable port`);
