@@ -40,15 +40,16 @@ export default function NodePort(props: PortProps) {
 	const datatypeLabel = `${props.port.datatype?.type ?? 'unknown'}${isNullable ? '?' : ''}${isArray ? '[]' : ''}`;
 
 	return <Tooltip label={datatypeLabel} withArrow opened={(props.port.datatype === undefined) ? false : undefined}>
-		<Box pos={'relative'} ref={ref} className={'nodrag'} bg={'blue'}>
+		<Box pos={'relative'} ref={ref} className={'nodrag'}>
 			<Handle style={{
 				position: 'absolute',
 				top: '50%',
 				left: '50%',
+				opacity: 0,
 				transform: 'translate(-50%, -50%)',
 				width: theme.spacing.xl,
 				height: theme.spacing.xl,
-				// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+
 			}} type={props.attribute.direction === 'input' ? 'target' : 'source'} id={props.attribute.name} position={props.attribute.direction === 'input' ? Position.Left : Position.Right} />
 			<Center>
 				{React.createElement(icon(), {

@@ -1,12 +1,11 @@
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/parameter-properties */
-/* eslint-disable @typescript-eslint/no-redundant-type-constituents */
+
 /* eslint-disable new-cap */
 
 import {Type} from 'class-transformer';
 import {NodeData} from './Node';
 import {type CoordinateExtent, type Position, type XYPosition, type Node} from 'reactflow';
 import {type CSSProperties} from 'react';
+import {type CustomNodeProps} from '../../components/reactflow/CustomNode';
 
 export class NodeWrapper<T extends NodeData> implements Node<T> {
 	@Type(() => NodeData) data: T;
@@ -36,9 +35,9 @@ export class NodeWrapper<T extends NodeData> implements Node<T> {
 	focusable?: boolean | undefined;
 	resizing?: boolean | undefined;
 
-	constructor(data: T, id: string, position: XYPosition) {
-		this.data = data;
-		this.id = id;
-		this.position = position;
+	constructor(props: CustomNodeProps) {
+		this.data = props.data as T;
+		this.id = props.id;
+		this.position = {x: props.xPos, y: props.yPos};
 	}
 }

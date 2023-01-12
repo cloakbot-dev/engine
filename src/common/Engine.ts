@@ -1,8 +1,7 @@
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/consistent-type-assertions */
 /* eslint-disable new-cap */
 import {type XYPosition} from 'reactflow';
-import {instanceToPlain} from 'class-transformer';
+import {Exclude, instanceToPlain} from 'class-transformer';
 import {plainToInstance, Type} from 'class-transformer';
 import {type NodeData} from './classes/Node';
 import {type Connection} from '../types';
@@ -11,13 +10,38 @@ import _ from 'lodash';
 import {NodeWrapper} from './classes/NodeWrapper';
 import {compress, decompress} from 'compressed-json';
 
+export type EngineEvents = {
+	'node-added': (id: string) => void;
+	'node-removed': (id: string) => void;
+	'changed': () => void;
+};
+
 export class Engine {
 	static load(string: string) {
 		return plainToInstance(Engine, decompress(JSON.parse(string)));
 	}
 
+	@Exclude() listeners = new Map<keyof EngineEvents, Array<EngineEvents[keyof EngineEvents]>>();
 	@Type(() => NodeWrapper<NodeData>) nodes = new Map<string, NodeWrapper<NodeData>>();
 	connections: Connection[] = [];
+
+	on<E extends keyof EngineEvents>(event: E, l: EngineEvents[E]) {
+		this.listeners.set(event, [...(this.listeners.get(event) ?? []), l]);
+	}
+
+	off<E extends keyof EngineEvents>(event: E, l: EngineEvents[E]) {
+		this.listeners.set(event, (this.listeners.get(event) ?? []).filter(listener => listener !== l));
+	}
+
+	emit<E extends keyof EngineEvents>(event: E, ...args: Parameters<EngineEvents[E]>) {
+		if (event !== 'changed') {
+			this.emit('changed');
+		}
+
+		for (const l of this.listeners.get(event) ?? []) {
+			(l as (...args: Parameters<EngineEvents[E]>) => any)(...args);
+		}
+	}
 
 	serialize() {
 		const string = JSON.stringify(compress(instanceToPlain(this)));
@@ -28,6 +52,7 @@ export class Engine {
 		const id = options?.id ?? v4();
 		this.nodes.set(id, {
 			id,
+			type: 'custom',
 			position: {
 				x: position.x,
 				y: position.y,
@@ -35,12 +60,16 @@ export class Engine {
 			data: node,
 			...options,
 		});
+
+		this.emit('node-added', id);
+
 		return id;
 	}
 
 	removeNode(id: string) {
 		this.nodes.delete(id);
 		this.connections = this.connections.filter(connection => connection.fromId !== id && connection.toId !== id);
+		this.emit('node-removed', id);
 	}
 
 	updateNode(id: string, change: Partial<Omit<NodeWrapper<NodeData>, 'id'>>) {
@@ -57,6 +86,8 @@ export class Engine {
 				...change.data,
 			} as NodeData,
 		});
+
+		this.emit('changed');
 	}
 
 	isCircular(fromId: string, toId: string): boolean {
@@ -125,7 +156,7 @@ export class Engine {
 			throw new Error('Cannot connect ports of different types');
 		}
 
-		if (this.connections.some((connection: Connection) => connection.fromId === fromId && connection.fromPort === fromPortName)) {
+		if (this.connections.some((connection: Connection) => connection.toId === toId && connection.toId === toPort.name)) {
 			throw new Error('Connection from port already exists');
 		}
 
@@ -147,8 +178,10 @@ export class Engine {
 	}
 
 	connect(fromId: string, toId: string, fromPort: Lowercase<string>, toPort: Lowercase<string>) {
-		if (!this.canConnect(fromId, toId, fromPort, toPort)) {
-			throw new Error('Cannot connect ports');
+		try {
+			this.canConnect(fromId, toId, fromPort, toPort);
+		} catch (error) {
+			return;
 		}
 
 		this.connections.push({
@@ -158,6 +191,8 @@ export class Engine {
 			fromPort,
 			toPort,
 		});
+
+		this.emit('changed');
 	}
 
 	disconnect(id: string) {
@@ -167,6 +202,11 @@ export class Engine {
 		}
 
 		this.connections.splice(index, 1);
+		this.emit('changed');
 		return index;
+	}
+
+	isConnected(node: string, port: Lowercase<string>) {
+		return this.connections.some((connection: Connection) => (connection.fromId === node && connection.fromPort === port) || (connection.toId === node && connection.toPort === port));
 	}
 }

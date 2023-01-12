@@ -13,7 +13,7 @@ export default function NodeBody(props: NodeBodyProps) {
 		<Flex direction={'column'} gap={'md'} p={'md'}>
 			{
 				Array.from(props.node.data.attributes.entries()).filter(([key]) => key !== 'execution-in' && key !== 'execution-out').map(([key, attr]) =>
-					<NodeAttribute key={key} attr={attr} />,
+					<NodeAttribute key={key} attr={attr} node={props.node} />,
 				)
 			}
 		</Flex>

@@ -1,10 +1,10 @@
 import React from 'react';
 import {type NodeData} from '../../common/classes/Node';
-import {type NodeWrapper} from '../../common/classes/NodeWrapper';
+import {NodeWrapper} from '../../common/classes/NodeWrapper';
 import NodeComponent from '../Node';
 export type CustomNodeProps = {
 	id: string;
-	data: NodeWrapper<NodeData>;
+	data: NodeData;
 	type: string;
 	xPos: number;
 	yPos: number;
@@ -18,7 +18,11 @@ export type CustomNodeProps = {
 };
 
 export default function CustomNode(props: CustomNodeProps) {
+	if (!props.data) {
+		return <div>):</div>;
+	}
+
 	return (
-		<NodeComponent node={props.data} selected={props.selected} dragging={props.dragging} />
+		<NodeComponent node={new NodeWrapper(props)} selected={props.selected} dragging={props.dragging} />
 	);
 }
