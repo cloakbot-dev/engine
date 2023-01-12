@@ -1,16 +1,14 @@
 import {Button, Divider, Flex, Paper, Text} from '@mantine/core';
 import React from 'react';
 import {type NodeData} from '../common/classes/Node';
-import {type NodeWrapper} from '../types';
+import {type NodeWrapper} from '../common/classes/NodeWrapper';
 import NodeBody from './NodeBody';
 import NodeHeader from './NodeHeader';
-import {Prism} from '@mantine/prism';
-import {type Engine} from '../common/Engine';
-import {instanceToPlain} from 'class-transformer';
 
 export type NodeProps = {
 	node: NodeWrapper<NodeData>;
-	engine: Engine;
+	dragging: boolean;
+	selected: boolean;
 };
 
 export default function Node(props: NodeProps) {
@@ -34,16 +32,6 @@ export default function Node(props: NodeProps) {
 					}
 				</Text>
 			</Flex>
-			{
-				showJson && (
-					<Prism
-						language={'json'}
-						trim
-					>
-						{JSON.stringify(instanceToPlain(props.engine), null, 2)}
-					</Prism>
-				)
-			}
 		</Paper>
 	);
 }

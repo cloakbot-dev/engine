@@ -1,12 +1,14 @@
-import {instanceToPlain} from 'class-transformer';
-
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/consistent-type-assertions */
 /* eslint-disable new-cap */
+import {type XYPosition} from 'reactflow';
+import {instanceToPlain} from 'class-transformer';
 import {plainToInstance, Type} from 'class-transformer';
 import {type NodeData} from './classes/Node';
 import {type Connection} from '../types';
 import {v4} from 'uuid';
 import _ from 'lodash';
-import {NodeWrapperClass} from './classes/NodeWrapper';
+import {NodeWrapper} from './classes/NodeWrapper';
 import {compress, decompress} from 'compressed-json';
 
 export class Engine {
@@ -14,7 +16,7 @@ export class Engine {
 		return plainToInstance(Engine, decompress(JSON.parse(string)));
 	}
 
-	@Type(() => NodeWrapperClass<NodeData>) nodes = new Map<string, NodeWrapperClass<NodeData>>();
+	@Type(() => NodeWrapper<NodeData>) nodes = new Map<string, NodeWrapper<NodeData>>();
 	connections: Connection[] = [];
 
 	serialize() {
@@ -22,17 +24,39 @@ export class Engine {
 		return (string);
 	}
 
-	addNode(node: NodeData, options?: Partial<Omit<NodeWrapperClass<NodeData>, 'data'>>) {
+	addNode(node: NodeData, position: XYPosition, options?: Partial<Omit<NodeWrapper<NodeData>, 'data' | 'position'>>) {
 		const id = options?.id ?? v4();
 		this.nodes.set(id, {
 			id,
-			position: options?.position ?? {x: 0, y: 0},
-			selected: options?.selected ?? false,
-			locked: options?.locked ?? false,
-			immortal: options?.immortal ?? false,
+			position: {
+				x: position.x,
+				y: position.y,
+			},
 			data: node,
+			...options,
 		});
 		return id;
+	}
+
+	removeNode(id: string) {
+		this.nodes.delete(id);
+		this.connections = this.connections.filter(connection => connection.fromId !== id && connection.toId !== id);
+	}
+
+	updateNode(id: string, change: Partial<Omit<NodeWrapper<NodeData>, 'id'>>) {
+		const node = this.nodes.get(id);
+		if (!node) {
+			throw new Error(`Node with id ${id} does not exist`);
+		}
+
+		this.nodes.set(id, {
+			...node,
+			...change,
+			data: {
+				...node.data,
+				...change.data,
+			} as NodeData,
+		});
 	}
 
 	isCircular(fromId: string, toId: string): boolean {
@@ -101,6 +125,10 @@ export class Engine {
 			throw new Error('Cannot connect ports of different types');
 		}
 
+		if (this.connections.some((connection: Connection) => connection.fromId === fromId && connection.fromPort === fromPortName)) {
+			throw new Error('Connection from port already exists');
+		}
+
 		if (fromPort.port.datatype !== undefined && toPort.port.datatype !== undefined) {
 			if (fromPort.port.datatype.type !== toPort.port.datatype.type) {
 				throw new Error('Cannot connect ports of different datatypes');
@@ -124,6 +152,7 @@ export class Engine {
 		}
 
 		this.connections.push({
+			id: v4(),
 			fromId,
 			toId,
 			fromPort,
@@ -131,17 +160,13 @@ export class Engine {
 		});
 	}
 
-	disconnect(fromId: string, toId: string, fromPort: Lowercase<string>, toPort: Lowercase<string>) {
-		const index = this.connections.findIndex(
-			(connection: Connection) => _.isEqual(connection, {fromId, toId, fromPort, toPort}),
-		);
-
+	disconnect(id: string) {
+		const index = this.connections.findIndex((connection: Connection) => connection.id === id);
 		if (index === -1) {
-			throw new Error('Connection does not exist');
-		} else {
-			this.connections.splice(index, 1);
+			throw new Error(`Connection with id ${id} does not exist`);
 		}
 
+		this.connections.splice(index, 1);
 		return index;
 	}
 }

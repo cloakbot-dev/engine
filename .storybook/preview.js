@@ -1,5 +1,7 @@
+import 'reflect-metadata';
 import { ColorSchemeProvider, MantineProvider } from "@mantine/core"
-import { useColorScheme } from "@mantine/hooks"
+import {useColorScheme} from "@mantine/hooks"
+import 'reactflow/dist/style.css';
 
 export const parameters = {
   actions: { argTypesRegex: "^on[A-Z].*" },
@@ -27,6 +29,8 @@ export const decorators = [
       }}
     >
       <ColorSchemeProvider colorScheme={colorScheme}>
-      <Story /></ColorSchemeProvider>
-  </MantineProvider>}
-]
+        <Story />
+      </ColorSchemeProvider>
+    </MantineProvider>
+  }
+];

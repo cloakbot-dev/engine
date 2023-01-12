@@ -1,7 +1,7 @@
 import {Box, Flex, Text, useMantineTheme, Divider} from '@mantine/core';
 import React from 'react';
 import {type NodeData} from '../common/classes/Node';
-import {type NodeWrapper} from '../types';
+import {type NodeWrapper} from '../common/classes/NodeWrapper';
 import NodePort from './NodePort';
 
 export type NodeHeaderProps = {
@@ -17,7 +17,13 @@ export default function NodeHeader(props: NodeHeaderProps) {
 			<Flex gap={'sm'} align={'center'}>
 				<>
 					{
-						props.node.data.attributes.get('execution-in')?.port && <NodePort color={props.node.data.accentColor} port={props.node.data.attributes.get('execution-in')!.port!} connected={false} />
+						(() => {
+							const attribute = props.node.data.attributes.get('execution-in');
+							if (attribute) {
+								return <NodePort attribute={attribute} color={props.node.data.accentColor}
+									port={attribute.port!} connected={false} />;
+							}
+						})()
 					}
 					<Divider
 						sx={_ => ({flexGrow: 1})}

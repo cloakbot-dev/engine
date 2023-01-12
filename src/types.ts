@@ -1,24 +1,12 @@
-import {type NodeData} from './common/classes/Node';
 import {type Value} from './common/classes/Value';
 
 export type Connection = {
+	id: string;
 	fromId: string;
 	toId: string;
 
 	fromPort: string;
 	toPort: string;
-};
-
-export type NodeWrapper<T extends NodeData> = {
-	id: string;
-	position: {
-		x: number;
-		y: number;
-	};
-	selected: boolean;
-	locked: boolean;
-	immortal: boolean;
-	data: T;
 };
 
 // eslint-disable-next-line @typescript-eslint/naming-convention

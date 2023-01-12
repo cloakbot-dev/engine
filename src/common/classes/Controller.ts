@@ -1,9 +1,8 @@
-import {SelectController} from './../controllers/SelectController';
 /* eslint-disable new-cap */
 
 import {Type} from 'class-transformer';
 import {type ReactNode} from 'react';
-import {type NonArrayDataType, type ClassConstructor} from '../../types';
+import {type NonArrayDataType} from '../../types';
 import {StringValue} from '../values/StringValue';
 import {Value} from './Value';
 

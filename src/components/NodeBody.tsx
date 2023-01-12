@@ -1,7 +1,7 @@
 import {Flex} from '@mantine/core';
 import React from 'react';
 import {type NodeData} from '../common/classes/Node';
-import {type NodeWrapper} from '../types';
+import {type NodeWrapper} from '../common/classes/NodeWrapper';
 import NodeAttribute from './NodeAttribute';
 
 export type NodeBodyProps = {
