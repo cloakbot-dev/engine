@@ -55,7 +55,7 @@ export default function NodePort(props: PortProps) {
 				{React.createElement(icon(), {
 					color: props.color,
 					size: 30,
-					stroke: hovered ? 2 : 1.2,
+					stroke: (hovered || props.connected) ? 2 : 1.2,
 					fill: props.connected ? props.color : 'transparent',
 					style: {
 						transition: 'all 0.2s ease',

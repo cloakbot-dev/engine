@@ -1,15 +1,8 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
-
 import 'reflect-metadata';
 import {type ComponentStory, type ComponentMeta} from '@storybook/react';
-// Import {Attribute} from '../common/classes/Attribute';
-// import {NodeData} from '../common/classes/Node';
-// import {Port} from '../common/classes/Port';
-// import {NumberValue} from '../common/values/NumberValue';
 import Node from '../components/Node';
-// Import {StringValue} from '../common/values/StringValue';
 import React, {useState} from 'react';
-// Import {SelectController} from '../common/controllers/SelectController';
 import 'reactflow/dist/style.css';
 import {Engine} from '../common/Engine';
 import {engineContext, handleConnection, handleEdgesChange, handleNodesChange} from '../components/EngineProvider';
