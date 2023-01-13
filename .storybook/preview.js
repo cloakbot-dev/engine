@@ -1,5 +1,6 @@
 import 'reflect-metadata';
 import { ColorSchemeProvider, MantineProvider } from "@mantine/core"
+import { NotificationsProvider } from '@mantine/notifications';
 import {useColorScheme} from "@mantine/hooks"
 import 'reactflow/dist/style.css';
 
@@ -28,9 +29,11 @@ export const decorators = [
         fontFamily: "monospace"
       }}
     >
-      <ColorSchemeProvider colorScheme={colorScheme}>
-        <Story />
-      </ColorSchemeProvider>
+      <NotificationsProvider>
+        <ColorSchemeProvider colorScheme={colorScheme}>
+          <Story />
+        </ColorSchemeProvider>
+      </NotificationsProvider>
     </MantineProvider>
   }
 ];

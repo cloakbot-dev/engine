@@ -1,8 +1,13 @@
+import {type Color} from '../../types';
+
 /* eslint-disable @typescript-eslint/parameter-properties */
 export class Value<T, IsArray extends boolean = boolean> {
 	readonly type: Lowercase<string>;
 	readonly value: T;
 	readonly isArray: IsArray;
+	get color(): Color {
+		return '#ffffff';
+	}
 
 	constructor(type: Lowercase<string>, value: T, isArray: IsArray = false as IsArray) {
 		this.type = type;

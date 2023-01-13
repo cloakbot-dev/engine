@@ -1,9 +1,10 @@
+import {showNotification} from '@mantine/notifications';
 import React from 'react';
-import {Background, BackgroundVariant, ReactFlow, type Edge} from 'reactflow';
+import {Background, BackgroundVariant, ConnectionLineType, ReactFlow, type Edge} from 'reactflow';
 import {type NodeData} from '../common/classes/Node';
 import {type NodeWrapper} from '../common/classes/NodeWrapper';
 import {type Engine} from '../common/Engine';
-import {engineContext, handleConnection, handleEdgesChange, handleNodesChange} from './EngineProvider';
+import {engineContext, handleConnection, handleEdgesChange, handleEdgeUpdate, handleNodesChange} from './EngineProvider';
 
 export type RendererProps = {
 	initialize?: (engine: Engine) => Engine;
@@ -29,7 +30,9 @@ function getEdges(engine: Engine): Edge[] {
 
 		style: {
 			strokeWidth: 3,
-			stroke: '#fff',
+			stroke: `${(conn.color as string) ?? '#fff'}`,
+			opacity: 0.8,
+			strokeLinecap: 'round',
 		},
 	}));
 }
@@ -44,11 +47,14 @@ export default function Renderer(props: RendererProps) {
 	const [nodes, setNodes] = React.useState < Array < NodeWrapper<NodeData>>>([]);
 	const [edges, setEdges] = React.useState<Edge[]>([]);
 
+	const [initialized, setInitialized] = React.useState(false);
 	React.useEffect(() => {
-		if (props.initialize) {
+		if (props.initialize && !initialized) {
 			ctx.setEngine(props.initialize(ctx.engine));
 		}
-	}, [props.initialize]);
+
+		setInitialized(true);
+	}, []);
 
 	React.useEffect(() => {
 		setNodes(getNodes(ctx.engine) || []);
@@ -66,11 +72,23 @@ export default function Renderer(props: RendererProps) {
 		};
 	}, [ctx.engine]);
 
+	const showError = (s: string) => {
+		showNotification({
+			title: 'Error',
+			message: s,
+			color: 'red',
+			autoClose: 5000,
+		});
+	};
+
 	return (
 		<ReactFlow {...ctx} nodes={nodes} edges={edges}
 			edgesFocusable={false}
 			defaultEdgeOptions={{
 				zIndex: 2000,
+				style: {
+					strokeLinecap: 'round',
+				},
 			}}
 			onNodesChange={c => {
 				ctx.setEngine(handleNodesChange(c, ctx.engine));
@@ -79,10 +97,24 @@ export default function Renderer(props: RendererProps) {
 				ctx.setEngine(handleEdgesChange(c, ctx.engine));
 			}}
 			onConnect={c => {
-				ctx.setEngine(handleConnection(c, ctx.engine));
+				ctx.setEngine(handleConnection(c, ctx.engine, showError));
 			}}
+
+			onEdgeUpdate={(o, n) => {
+				ctx.setEngine(handleEdgeUpdate(o, n, ctx.engine, showError));
+			}}
+
+			edgeUpdaterRadius={10}
+
+			connectionLineStyle={{
+				strokeWidth: 3,
+				strokeDasharray: '15 15',
+				opacity: 0.4,
+			}}
+
+			connectionLineType={ConnectionLineType.Bezier}
 		>
-			<Background variant={BackgroundVariant.Cross} size={10} gap={50} />
+			<Background variant={BackgroundVariant.Cross} size={10} gap={ctx.backgroundGap} color={'#ffffff20'} />
 		</ReactFlow>
 	);
 }

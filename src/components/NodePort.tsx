@@ -4,9 +4,8 @@ import {type Port} from '../common/classes/Port';
 import {type Color} from '../types';
 import {useHover} from '@mantine/hooks';
 import {Box, Center, Tooltip, useMantineTheme} from '@mantine/core';
-import {Handle} from 'reactflow';
+import {Handle, Position} from 'reactflow';
 import {type Attribute} from '../common/classes/Attribute';
-import {Position} from 'reactflow';
 
 export type PortProps = {
 	port: Port<boolean>;
@@ -40,7 +39,7 @@ export default function NodePort(props: PortProps) {
 	const datatypeLabel = `${props.port.datatype?.type ?? 'unknown'}${isNullable ? '?' : ''}${isArray ? '[]' : ''}`;
 
 	return <Tooltip label={datatypeLabel} withArrow opened={(props.port.datatype === undefined) ? false : undefined}>
-		<Box pos={'relative'} ref={ref} className={'nodrag'}>
+		<Box pos={'relative'} ref={ref}>
 			<Handle style={{
 				position: 'absolute',
 				top: '50%',
@@ -58,7 +57,7 @@ export default function NodePort(props: PortProps) {
 					stroke: (hovered || props.connected) ? 2 : 1.2,
 					fill: props.connected ? props.color : 'transparent',
 					style: {
-						transition: 'all 0.2s ease',
+						transition: 'all 0.4s ease',
 					},
 				})}
 			</Center>

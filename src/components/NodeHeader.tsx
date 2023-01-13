@@ -2,6 +2,7 @@ import {Box, Flex, Text, useMantineTheme, Divider} from '@mantine/core';
 import React from 'react';
 import {type NodeData} from '../common/classes/Node';
 import {type NodeWrapper} from '../common/classes/NodeWrapper';
+import useConnected from './hooks/useConnected';
 import NodePort from './NodePort';
 
 export type NodeHeaderProps = {
@@ -20,8 +21,9 @@ export default function NodeHeader(props: NodeHeaderProps) {
 						(() => {
 							const attribute = props.node.data.attributes.get('execution-in');
 							if (attribute) {
+								const c = useConnected(props.node.id, 'execution-in');
 								return <NodePort attribute={attribute} color={props.node.data.accentColor}
-									port={attribute.port!} connected={false} />;
+									port={attribute.port!} connected={c} />;
 							}
 						})()
 					}
@@ -35,7 +37,16 @@ export default function NodeHeader(props: NodeHeaderProps) {
 							</Text>
 						</>}
 					/>
-
+					{
+						(() => {
+							const attribute = props.node.data.attributes.get('execution-out');
+							if (attribute) {
+								const c = useConnected(props.node.id, 'execution-out');
+								return <NodePort attribute={attribute} color={props.node.data.accentColor}
+									port={attribute.port!} connected={c} />;
+							}
+						})()
+					}
 				</>
 			</Flex>
 		</Box>

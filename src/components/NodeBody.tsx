@@ -1,4 +1,4 @@
-import {Flex} from '@mantine/core';
+import {Box, Flex} from '@mantine/core';
 import React from 'react';
 import {type NodeData} from '../common/classes/Node';
 import {type NodeWrapper} from '../common/classes/NodeWrapper';
@@ -9,10 +9,17 @@ export type NodeBodyProps = {
 };
 
 export default function NodeBody(props: NodeBodyProps) {
+	const attributes = Array.from(props.node.data.attributes.entries()).filter(([key]) => key !== 'execution-in' && key !== 'execution-out');
 	return (
 		<Flex direction={'column'} gap={'md'} p={'md'}>
 			{
-				Array.from(props.node.data.attributes.entries()).filter(([key]) => key !== 'execution-in' && key !== 'execution-out').map(([key, attr]) =>
+				attributes.filter(([_, value]) => value.direction === 'input').map(([key, attr]) =>
+					<NodeAttribute key={key} attr={attr} node={props.node} />,
+				)
+			}
+			<Box style={{flexGrow: 1}} />
+			{
+				attributes.filter(([_, value]) => value.direction === 'output').map(([key, attr]) =>
 					<NodeAttribute key={key} attr={attr} node={props.node} />,
 				)
 			}

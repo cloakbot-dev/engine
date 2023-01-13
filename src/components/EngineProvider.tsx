@@ -3,14 +3,28 @@ import {type ReactFlowProps} from '@reactflow/core';
 import React, {createContext, useState} from 'react';
 import {Engine} from '../common/Engine';
 
-export const handleConnection = (connection: Parameters<NonNullable<ReactFlowProps['onConnect']>>['0'], engine: Engine) => {
+export const handleConnection = (connection: Parameters<NonNullable<ReactFlowProps['onConnect']>>['0'], engine: Engine, onError?: (error: string) => void) => {
 	if (!connection.source || !connection.target || !connection.sourceHandle || !connection.targetHandle) {
 		return engine;
 	}
 
-	engine.connect(connection.source, connection.target, connection.sourceHandle as Lowercase<string>, connection.targetHandle as Lowercase<string>);
+	const c = engine.getNode(connection.source)?.data.attributes.get(connection.sourceHandle)?.port?.datatype?.color;
 
-	engine.emit('changed');
+	try {
+		engine.connect({
+			fromId: connection.source,
+			fromPort: connection.sourceHandle as Lowercase<string>,
+			toId: connection.target,
+			toPort: connection.targetHandle as Lowercase<string>,
+			color: c,
+		});
+		engine.emit('changed');
+	} catch (e) {
+		if (onError) {
+			onError((e as {message: string}).message);
+		}
+	}
+
 	return engine;
 };
 
@@ -18,7 +32,12 @@ export const handleEdgesChange = (changes: Parameters<NonNullable<ReactFlowProps
 	for (const change of changes) {
 		switch (change.type) {
 			case 'add':
-				engine.connect(change.item.source, change.item.target, change.item.sourceHandle as Lowercase<string>, change.item.targetHandle as Lowercase<string>);
+				engine.connect({
+					fromId: change.item.source,
+					fromPort: change.item.sourceHandle as Lowercase<string>,
+					toId: change.item.target,
+					toPort: change.item.targetHandle as Lowercase<string>,
+				});
 				break;
 			case 'remove':
 				engine.disconnect(change.id);
@@ -36,6 +55,21 @@ export const handleEdgesChange = (changes: Parameters<NonNullable<ReactFlowProps
 
 	engine.emit('changed');
 	return engine;
+};
+
+export const handleEdgeUpdate = (oldEdge: Parameters<NonNullable<ReactFlowProps['onEdgeUpdate']>>['0'], newEdge: Parameters<NonNullable<ReactFlowProps['onEdgeUpdate']>>['1'], engine: Engine, showError: (e: string) => void) => {
+	let e = handleEdgesChange([{
+		type: 'remove',
+		id: oldEdge.id,
+	}], engine);
+	e = handleConnection({
+		source: newEdge.source,
+		sourceHandle: newEdge.sourceHandle!,
+		target: newEdge.target,
+		targetHandle: newEdge.targetHandle!,
+	}, e, showError);
+	e.emit('changed');
+	return e;
 };
 
 export const handleNodesChange = (changes: Parameters<NonNullable<ReactFlowProps['onNodesChange']>>['0'], engine: Engine) => {
@@ -90,6 +124,7 @@ export type EngineContext = {
 	handleEdgesChange: typeof handleEdgesChange;
 	handleNodesChange: typeof handleNodesChange;
 	nodeTypes: ReactFlowProps['nodeTypes'];
+	backgroundGap: number;
 };
 
 export const engineContext = createContext<EngineContext | undefined>(undefined);
@@ -112,6 +147,7 @@ export default function EngineProvider(props: React.PropsWithChildren) {
 			handleConnection,
 			handleEdgesChange,
 			handleNodesChange,
+			backgroundGap: 50,
 			nodeTypes: {
 				custom: () => <div>AAA</div>,
 			},

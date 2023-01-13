@@ -9,6 +9,7 @@ export class Attribute<T extends DataType, Name extends Lowercase<string> = Lowe
 	@Type(() => Port) port: Port<boolean> | undefined = undefined;
 	@Type(() => Controller) controller?: T extends NonArrayDataType ? Controller<T, any> : never;
 	label: string;
+	nodeId: string | undefined = undefined;
 
 	readonly name: Name;
 	readonly direction: Dir;

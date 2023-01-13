@@ -1,7 +1,8 @@
-import {Box, Divider, Flex, Paper, Text} from '@mantine/core';
-import React, {useEffect, useRef} from 'react';
+import {Divider, Flex, Paper, Text} from '@mantine/core';
+import React, {useContext, useEffect, useRef} from 'react';
 import {type NodeData} from '../common/classes/Node';
 import {type NodeWrapper} from '../common/classes/NodeWrapper';
+import {engineContext} from './EngineProvider';
 import NodeBody from './NodeBody';
 import NodeHeader from './NodeHeader';
 
@@ -12,18 +13,22 @@ export type NodeProps = {
 };
 
 export default function Node(props: NodeProps) {
-	const [showJson, setShowJson] = React.useState(false);
 	const [dimensions, setDimensions] = React.useState <{w: number; h: number} | undefined>(undefined);
-
+	const ctx = useContext(engineContext);
 	const ref = useRef<HTMLDivElement>(null);
 
 	useEffect(() => {
-		if (ref.current === null) {
+		if (ref.current === null || ctx === undefined) {
 			return;
 		}
 
 		const {width, height} = ref.current.getBoundingClientRect();
-		setDimensions({w: Math.ceil(width / 50) * 50, h: Math.ceil(height / 50) * 50});
+
+		if (width % ctx.backgroundGap !== 0 || height % ctx.backgroundGap !== 0) {
+			return;
+		}
+
+		setDimensions({w: Math.ceil(width / ctx.backgroundGap) * ctx.backgroundGap, h: Math.ceil(height / ctx.backgroundGap) * ctx.backgroundGap});
 	}, [ref]);
 
 	return (
@@ -32,7 +37,7 @@ export default function Node(props: NodeProps) {
 				<NodeHeader node={props.node} />
 				<NodeBody node={props.node} />
 
-				<Box style={{flexGrow: 1}} />
+				{/* <Box style={{flexGrow: 1}} /> */}
 				<Divider />
 				<Flex style={{justifySelf: 'flex-end'}} m={'md'} direction={'row'} justify={'space-between'} align={'center'}>
 					<Text opacity={0.5}>

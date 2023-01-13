@@ -9,6 +9,16 @@ import {v4} from 'uuid';
 import _ from 'lodash';
 import {NodeWrapper} from './classes/NodeWrapper';
 import {compress, decompress} from 'compressed-json';
+import {type Attribute} from './classes/Attribute';
+import {type Value} from './classes/Value';
+
+export type ExecutionContext = {
+	engine: Engine;
+	values: Record<string, Record<string, Value<any>>>;
+	set(name: string, value: Value<any>): void;
+	get<T = any>(name: string): Value<T>;
+	execute(path: string): void;
+};
 
 export type EngineEvents = {
 	'node-added': (id: string) => void;
@@ -43,6 +53,75 @@ export class Engine {
 		}
 	}
 
+	getGetter(nodeId: string, ctx: ExecutionContext['values']) {
+		return (name: string): Value<any> => {
+			let value: Value<any> | undefined;
+			const connection = this.connections.find(c => c.toId === nodeId && c.toPort === name);
+			if (connection) {
+				if (!ctx[connection.fromId]) {
+					throw new Error(`Could not find value for ${connection.fromId}.${connection.fromPort}, did you forget to execute it?`);
+				}
+
+				value = ctx[connection.fromId][connection.fromPort];
+			} else {
+				const node = this.nodes.get(nodeId)!;
+				value = node.data.attributes.get(name)?.controller?.value as Value<any>;
+			}
+
+			if (!value) {
+				throw new Error(`Could not find value for ${nodeId}.${name}`);
+			}
+
+			return value;
+		};
+	}
+
+	execute(nodeId: string, path: Lowercase<string> = 'execution-in', ctx?: ExecutionContext['values']) {
+		const node = this.nodes.get(nodeId);
+		if (!node) {
+			throw new Error(`Node with id ${nodeId} does not exist`);
+		}
+
+		const context: ExecutionContext = {
+			engine: this as Engine,
+			values: ctx ?? {},
+			set(name: string, value: Value<any>) {
+				this.values[nodeId] = {
+					...this.values[nodeId],
+					[name]: value,
+				};
+			},
+			get(name: string) {
+				return this.engine.getGetter(nodeId, ctx ?? {})(name);
+			},
+			execute(path: string) {
+				const node = this.engine.nodes.get(nodeId)!;
+				const attribute = node.data.attributes.get(path);
+				if (!attribute) {
+					throw new Error(`Attribute '${path}' does not exist on node ${nodeId}`);
+				}
+
+				if (attribute.direction !== 'output' || attribute.port === undefined || attribute.port.type !== 'execution') {
+					throw new Error(`Attribute '${path}' is not a valid output port`);
+				}
+
+				const connection = this.engine.connections.find(c => c.fromId === nodeId && c.fromPort === path);
+				if (!connection) {
+					throw new Error(`Attribute '${path}' is not connected`);
+				}
+
+				this.engine.execute(connection.toId, connection.toPort as Lowercase<string>, this.values);
+			},
+		};
+
+		const handler = node.data.handlers.get(path);
+		if (!handler) {
+			throw new Error(`Handler '${path}' does not exist on node ${nodeId}`);
+		}
+
+		handler(context);
+	}
+
 	serialize() {
 		const string = JSON.stringify(compress(instanceToPlain(this)));
 		return (string);
@@ -50,6 +129,11 @@ export class Engine {
 
 	addNode(node: NodeData, position: XYPosition, options?: Partial<Omit<NodeWrapper<NodeData>, 'data' | 'position'>>) {
 		const id = options?.id ?? v4();
+
+		node.attributes.forEach(a => {
+			a.nodeId = id;
+		});
+
 		this.nodes.set(id, {
 			id,
 			type: 'custom',
@@ -64,6 +148,10 @@ export class Engine {
 		this.emit('node-added', id);
 
 		return id;
+	}
+
+	getNode(id: string) {
+		return this.nodes.get(id);
 	}
 
 	removeNode(id: string) {
@@ -121,7 +209,32 @@ export class Engine {
 		return false;
 	}
 
-	canConnect(fromId: string, toId: string, fromPortName: Lowercase<string>, toPortName: Lowercase<string>) {
+	canConnectPorts(from: {port: Attribute<any, any, any>['port']; direction: Attribute<any, any, any>['direction']}, to: Attribute<any, any, any>) {
+		if (from.direction === to.direction) {
+			throw new Error('Cannot connect ports of the same direction');
+		}
+
+		if (!from.port || !to.port) {
+			throw new Error('Cannot connect ports that do not exist');
+		}
+
+		if (from.port.type !== to.port.type) {
+			throw new Error('Cannot connect ports of different types');
+		}
+
+		if (from.port.datatype !== undefined && to.port.datatype !== undefined) {
+			if (from.port.datatype.type !== to.port.datatype.type) {
+				throw new Error('Cannot connect ports of different datatypes');
+			}
+
+			if (from.port.datatype.isArray !== to.port.datatype.isArray) {
+				throw new Error('Cannot connect an array port and a non-array port');
+			}
+		}
+	}
+
+	canConnect(options: Omit<Connection, 'id'>) {
+		const {fromId, fromPort, toId, toPort} = options;
 		const from = this.nodes.get(fromId);
 		const to = this.nodes.get(toId);
 
@@ -133,42 +246,26 @@ export class Engine {
 			throw new Error(`Node with id ${toId} does not exist`);
 		}
 
-		const fromPort = from.data.attributes.get(fromPortName);
-		const toPort = to.data.attributes.get(toPortName);
+		const fromPortInstance = from.data.attributes.get(fromPort);
+		const toPortInstance = to.data.attributes.get(toPort);
 
-		if (!fromPort || fromPort.port === undefined) {
-			throw new Error(`Attribute ${fromPortName} does not exist or does not have a connectable port`);
+		if (!fromPortInstance || fromPortInstance.port === undefined) {
+			throw new Error(`Attribute ${fromPort} does not exist or does not have a connectable port`);
 		}
 
-		if (!toPort || toPort.port === undefined) {
-			throw new Error(`Attribute ${toPortName} does not exist or does not have a connectable port`);
+		if (!toPortInstance || toPortInstance.port === undefined) {
+			throw new Error(`Attribute ${toPort} does not exist or does not have a connectable port`);
 		}
 
 		if (fromId === toId) {
 			throw new Error('Cannot connect a node to itself');
 		}
 
-		if (fromPort.direction === toPort.direction) {
-			throw new Error('Cannot connect ports of the same direction');
+		if (toPortInstance.direction === 'input' && this.connections.some((connection: Connection) => connection.toId === toId && connection.toPort === toPort)) {
+			throw new Error('Cannot connect to an input port that already has a connection');
 		}
 
-		if (fromPort.port.type !== toPort.port.type) {
-			throw new Error('Cannot connect ports of different types');
-		}
-
-		if (this.connections.some((connection: Connection) => connection.toId === toId && connection.toId === toPort.name)) {
-			throw new Error('Connection from port already exists');
-		}
-
-		if (fromPort.port.datatype !== undefined && toPort.port.datatype !== undefined) {
-			if (fromPort.port.datatype.type !== toPort.port.datatype.type) {
-				throw new Error('Cannot connect ports of different datatypes');
-			}
-
-			if (fromPort.port.datatype.isArray !== toPort.port.datatype.isArray) {
-				throw new Error('Cannot connect an array port and a non-array port');
-			}
-		}
+		this.canConnectPorts(fromPortInstance, toPortInstance);
 
 		if (this.isCircular(fromId, toId)) {
 			throw new Error('Cannot connect nodes in a circular fashion');
@@ -177,19 +274,12 @@ export class Engine {
 		return true;
 	}
 
-	connect(fromId: string, toId: string, fromPort: Lowercase<string>, toPort: Lowercase<string>) {
-		try {
-			this.canConnect(fromId, toId, fromPort, toPort);
-		} catch (error) {
-			return;
-		}
+	connect(options: Omit<Connection, 'id'>) {
+		this.canConnect(options);
 
 		this.connections.push({
+			...options,
 			id: v4(),
-			fromId,
-			toId,
-			fromPort,
-			toPort,
 		});
 
 		this.emit('changed');

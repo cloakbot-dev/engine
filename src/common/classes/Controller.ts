@@ -1,7 +1,7 @@
 /* eslint-disable new-cap */
 
 import {Type} from 'class-transformer';
-import {type ReactNode} from 'react';
+import React from 'react';
 import {type NonArrayDataType} from '../../types';
 import {StringValue} from '../values/StringValue';
 import {Value} from './Value';
@@ -35,7 +35,7 @@ export class Controller<T extends NonArrayDataType, Props> {
 		this.value = value;
 	}
 
-	render(): ReactNode {
-		return null;
+	render(): React.FC {
+		return () => React.createElement(React.Fragment, {}, 'No render function defined');
 	}
 }

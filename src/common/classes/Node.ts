@@ -1,9 +1,10 @@
 /* eslint-disable new-cap */
 /* eslint-disable @typescript-eslint/member-ordering */
 /* eslint-disable @typescript-eslint/parameter-properties */
-import {Type} from 'class-transformer';
+import {Exclude, Type} from 'class-transformer';
 import _ from 'lodash';
 import {type Color, type DataType, type IO} from '../../types';
+import {type ExecutionContext} from '../Engine';
 import {Attribute} from './Attribute';
 import {Port} from './Port';
 
@@ -12,6 +13,7 @@ export class NodeData<Name extends Lowercase<string> = Lowercase<string>, Attrib
 	color: Color = '#1062e6';
 	accentColor: Color = '#ffffff';
 	@Type(() => Attribute) attributes: Attributes;
+	@Exclude() handlers = new Map<string, (ctx: ExecutionContext) => void>();
 
 	readonly name: Name;
 
@@ -27,6 +29,10 @@ export class NodeData<Name extends Lowercase<string> = Lowercase<string>, Attrib
 		return this;
 	}
 
+	getPort(name: string) {
+		return this.attributes.get(name)?.port;
+	}
+
 	addAttribute<T extends DataType, N extends Lowercase<string>, D extends IO>(attribute: Attribute<T, N, D>) {
 		this.attributes.set(attribute.name, attribute);
 		return this as unknown as NodeData<Name, Attributes & Record<N, Attribute<T, N, D>>>;
@@ -38,6 +44,25 @@ export class NodeData<Name extends Lowercase<string> = Lowercase<string>, Attrib
 		return _.pickBy(attr, attribute => attribute.direction === direction) as {
 			[key in keyof typeof attr as typeof attr[key]['direction'] extends Dir ? key : never]: typeof attr[key]['direction'] extends Dir ? typeof attr[key] : never
 		};
+	}
+
+	handle<K extends Lowercase<string>>(name: K, handler: (ctx: ExecutionContext) => void) {
+		if (this.attributes.has(name)) {
+			const attr = this.attributes.get(name);
+
+			if (attr?.direction !== 'input') {
+				throw new Error(`Attribute ${name} is not an input`);
+			}
+
+			if (attr?.port?.type !== 'execution') {
+				throw new Error(`Attribute ${name} is not an execution port`);
+			}
+
+			this.handlers.set(name, handler);
+			return this;
+		}
+
+		throw new Error(`Attribute ${name} does not exist on node ${this.name}`);
 	}
 
 	addInputExecution() {

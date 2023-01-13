@@ -7,6 +7,8 @@ export type Connection = {
 
 	fromPort: string;
 	toPort: string;
+
+	color?: Color;
 };
 
 // eslint-disable-next-line @typescript-eslint/naming-convention
