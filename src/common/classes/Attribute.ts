@@ -1,18 +1,31 @@
+import {StringController} from './../controllers/StringController';
 /* eslint-disable new-cap */
 import {Type} from 'class-transformer';
 import _ from 'lodash';
 import {type NonArrayDataType, type DataType, type IO} from '../../types';
 import {Controller} from './Controller';
 import {Port} from './Port';
+import {ButtonController} from '../controllers/output/ButtonController';
+import {NumberController} from '../controllers/NumberController';
 
 export class Attribute<T extends DataType, Name extends Lowercase<string> = Lowercase<string>, Dir extends IO = IO> {
 	@Type(() => Port) port: Port<boolean> | undefined = undefined;
-	@Type(() => Controller) controller?: T extends NonArrayDataType ? Controller<T, any> : never;
+	@Type(() => Controller, {
+		discriminator: {
+			property: '__controller',
+			subTypes: [
+				{value: StringController, name: 'StringController'},
+				{value: ButtonController, name: 'ButtonController'},
+				{value: NumberController, name: 'NumberController'},
+			],
+		},
+	}) controller?: T extends NonArrayDataType ? Controller<T, any> : never;
 
 	label: string;
 	nodeId: string | undefined = undefined;
 
-	readonly name: Name;
+	// eslint-disable-next-line @typescript-eslint/member-ordering
+	@Type(() => String) readonly name: Name;
 	readonly direction: Dir;
 
 	constructor(name: Name, direction: Dir) {

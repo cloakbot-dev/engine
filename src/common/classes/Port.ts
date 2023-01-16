@@ -1,34 +1,32 @@
-import {NumberValue} from './../values/NumberValue';
 import {Type} from 'class-transformer';
 import {type Color, type DataType, type PortTypes} from '../../types';
-import {StringValue} from '../values/StringValue';
 import {Value} from './Value';
+import {NullValue} from '../values/NullValue';
+import {NumberValue} from '../values/NumberValue';
+import {StringValue} from '../values/StringValue';
 
 export class Port<IsNullable extends boolean = false, Type extends PortTypes = PortTypes> {
 	nullable: IsNullable;
 	color: Color = '#ffffff';
 	type: Type;
 	// eslint-disable-next-line @typescript-eslint/member-ordering, new-cap
-	@Type(() => Value, {
+	@Type(() => Value || undefined, {
 		discriminator: {
 			property: '__type',
 			subTypes: [
-				{
-					name: 'string',
-					value: StringValue,
-				},
-				{
-					name: 'number',
-					value: NumberValue,
-				},
+				{value: StringValue, name: 'StringValue'},
+				{value: NumberValue, name: 'NumberValue'},
+				{value: NullValue, name: 'NullValue'},
 			],
 		},
-	}) readonly datatype: Type extends 'execution' ? undefined : DataType;
+	}) readonly datatype: Type extends 'execution' ? NullValue<any> : DataType = new NullValue();
 
-	constructor(type: Type, datatype: Type extends 'execution' ? undefined : DataType) {
+	constructor(type: Type, datatype: Type extends 'execution' ? NullValue<false> : DataType) {
 		this.nullable = false as IsNullable;
 		this.type = type;
-		this.datatype = datatype;
+		if (datatype !== undefined) {
+			this.datatype = datatype;
+		}
 	}
 
 	setColor(c: Color) {

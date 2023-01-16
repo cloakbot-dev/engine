@@ -5,7 +5,7 @@ import React from 'react';
 import {Controller} from '../../classes/Controller';
 
 export class ButtonController<T extends NumberValue<false>> extends Controller<T, ButtonProps> {
-	onClick: (ctx: EngineContext) => void;
+	onClick: ((ctx: EngineContext) => void) | undefined;
 	constructor(onClick: (ctx: EngineContext) => void) {
 		super(new NumberValue(0) as T);
 		this.onClick = onClick;
@@ -15,7 +15,11 @@ export class ButtonController<T extends NumberValue<false>> extends Controller<T
 		return () => {
 			const ctx = React.useContext(engineContext);
 			return <Button {...this.props} onClick={() => {
-				this.onClick(ctx!);
+				if (this.onClick) {
+					this.onClick(ctx!);
+				} else {
+					console.warn('ButtonController.onClick is undefined');
+				}
 			}} />;
 		};
 	}

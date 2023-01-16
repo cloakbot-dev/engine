@@ -1,6 +1,6 @@
 import {NodeData} from './classes/Node';
 /* eslint-disable new-cap */
-import {Exclude, instanceToPlain, Transform} from 'class-transformer';
+import {instanceToPlain, Transform, Exclude} from 'class-transformer';
 import {plainToInstance} from 'class-transformer';
 import {type Connection} from '../types';
 import {v4} from 'uuid';
@@ -31,7 +31,6 @@ export class Engine {
 		return e;
 	}
 
-	@Exclude() listeners = new Map<keyof EngineEvents, Array<EngineEvents[keyof EngineEvents]>>();
 	@Transform(value => {
 		const map = new Map<string, NodeWrapper>();
 		for (const entry of Object.entries(value.value)) {
@@ -39,11 +38,15 @@ export class Engine {
 				enableImplicitConversion: true,
 			});
 
+			console.log((entry[1] as {id: string}).id, entry[0]);
+
 			map.set(entry[0], new NodeWrapper(entry[1] as any));
 		}
 
 		return map;
 	}, {toClassOnly: true}) nodes = new Map<string, NodeWrapper>();
+
+	@Exclude() listeners = new Map<keyof EngineEvents, Array<EngineEvents[keyof EngineEvents]>>();
 
 	connections: Connection[] = [];
 

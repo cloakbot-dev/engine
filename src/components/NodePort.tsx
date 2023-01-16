@@ -33,7 +33,8 @@ export default function NodePort(props: PortProps) {
 
 	const {ref, hovered} = useHover();
 
-	const isArray = props.port.datatype?.isArray;
+	// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+	const {isArray} = props.port.datatype;
 	const isNullable = props.port.nullable;
 	const datatypeLabel = `${props.port.datatype?.type ?? 'unknown'}${isNullable ? '?' : ''}${isArray ? '[]' : ''}`;
 

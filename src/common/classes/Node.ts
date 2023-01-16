@@ -1,10 +1,12 @@
+import {Exclude, instanceToPlain} from 'class-transformer';
 /* eslint-disable new-cap */
 /* eslint-disable @typescript-eslint/member-ordering */
 /* eslint-disable @typescript-eslint/parameter-properties */
-import {Exclude, plainToClass, Transform} from 'class-transformer';
+import {plainToClass, Transform} from 'class-transformer';
 import _ from 'lodash';
 import {type Color, type DataType, type IO} from '../../types';
 import {type ExecutionContext} from '../Engine';
+import {NullValue} from '../values/NullValue';
 import {Attribute} from './Attribute';
 import {Port} from './Port';
 
@@ -15,12 +17,21 @@ export class NodeData<Name extends Lowercase<string> = Lowercase<string>, Attrib
 	@Transform(value => {
 		const map = new Map<string, Attribute<any>>();
 		for (const entry of Object.entries(value.value)) {
-			console.log(entry[1]);
 			map.set(entry[0], plainToClass(Attribute, entry[1]));
 		}
 
 		return map;
-	}, {toClassOnly: true}) attributes: Attributes;
+	}, {toClassOnly: true})
+	@Transform((value: any) => {
+		const attributes: Record<string, Record<string, unknown>> = {};
+
+		for (const entry of (value.value as Map<string, Attribute<any>>).entries()) {
+			console.log(entry[0], entry[1]);
+			attributes[entry[0]] = instanceToPlain(entry[1]);
+		}
+
+		return attributes;
+	}, {toPlainOnly: true}) attributes: Attributes;
 
 	@Exclude() handlers = new Map<string, (ctx: ExecutionContext) => void>();
 
@@ -75,11 +86,11 @@ export class NodeData<Name extends Lowercase<string> = Lowercase<string>, Attrib
 	}
 
 	addInputExecution() {
-		return this.addAttribute(new Attribute('execution-in', 'input').setPort(new Port('execution', undefined)));
+		return this.addAttribute(new Attribute('execution-in', 'input').setPort(new Port('execution', new NullValue())));
 	}
 
 	addOutputExecution() {
-		return this.addAttribute(new Attribute('execution-out', 'output').setPort(new Port('execution', undefined)));
+		return this.addAttribute(new Attribute('execution-out', 'output').setPort(new Port('execution', new NullValue())));
 	}
 }
 

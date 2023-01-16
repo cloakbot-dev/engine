@@ -3,6 +3,7 @@
 import {Type} from 'class-transformer';
 import React from 'react';
 import {type NonArrayDataType} from '../../types';
+import {NullValue} from '../values/NullValue';
 import {NumberValue} from '../values/NumberValue';
 import {StringValue} from '../values/StringValue';
 import {Value} from './Value';
@@ -14,8 +15,10 @@ export class Controller<T extends NonArrayDataType, Props> {
 			subTypes: [
 				{value: StringValue, name: 'StringValue'},
 				{value: NumberValue, name: 'NumberValue'},
+				{value: NullValue, name: 'NullValue'},
 			],
 		},
+		keepDiscriminatorProperty: true,
 	}) value: T;
 
 	props?: Props = undefined;
@@ -24,7 +27,7 @@ export class Controller<T extends NonArrayDataType, Props> {
 
 	constructor(defaultValue: T) {
 		this.value = defaultValue;
-		this.type = defaultValue.type;
+		this.type = defaultValue?.type;
 	}
 
 	setProps(props: Props) {
@@ -33,7 +36,6 @@ export class Controller<T extends NonArrayDataType, Props> {
 	}
 
 	update(value: T) {
-		console.log(value);
 		this.value = value;
 	}
 
