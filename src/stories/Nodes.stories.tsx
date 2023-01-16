@@ -5,7 +5,7 @@ import Node from '../components/Node';
 import React, {useState} from 'react';
 import 'reactflow/dist/style.css';
 import {Engine} from '../common/Engine';
-import {type EngineContext, engineContext, handleConnection, handleEdgesChange, handleNodesChange} from '../components/EngineProvider';
+import {engineContext, handleConnection, handleEdgesChange, handleNodesChange} from '../components/EngineProvider';
 import CustomNode, {type CustomNodeProps} from '../components/reactflow/CustomNode';
 import {Attribute} from '../common/classes/Attribute';
 import {NodeData} from '../common/classes/Node';
@@ -14,11 +14,11 @@ import {SelectController} from '../common/controllers/SelectController';
 import {NumberValue} from '../common/values/NumberValue';
 import {StringValue} from '../common/values/StringValue';
 import Renderer from '../components/Renderer';
-import {Text} from '@mantine/core';
-import {ButtonController} from '../common/controllers/output/ButtonController';
 import {NumberController} from '../common/controllers/NumberController';
 import {showNotification} from '@mantine/notifications';
 import _ from 'lodash';
+import {ButtonController} from '../common/controllers/output/ButtonController';
+import {Text} from '@mantine/core';
 
 const story: ComponentMeta<typeof Node> = {
 	title: 'Node',
@@ -31,7 +31,7 @@ const story: ComponentMeta<typeof Node> = {
 
 		React.useEffect(() => {
 			const l = () => {
-				setEngine(e => e);
+				setEngine(e => _.cloneDeep(e));
 			};
 
 			engine.on('changed', l);
@@ -59,19 +59,7 @@ export default story;
 const executionNode = new NodeData('execution')
 	.setColors('#42f54b', '#ffffff')
 	.addAttribute(new Attribute<NumberValue<false>>('_', 'output').setPort(new Port('execution', undefined)).setController(
-		new ButtonController((ctx: EngineContext) => {
-			const node = Array.from(ctx.engine.nodes.values()).find(n => n.data.name === 'execution');
-
-			const connections = Array.from(ctx.engine.connections.values()).filter(c => c.fromId === node?.id && c.fromPort === '_');
-
-			if (connections.length === 0) {
-				return;
-			}
-
-			for (const connection of connections) {
-				ctx.engine.execute(connection.toId, connection.toPort as Lowercase<string>);
-			}
-
+		new ButtonController(() => {
 			console.log('Debug Button is working!');
 		}).setProps({
 			children: <Text>Run</Text>,
@@ -122,11 +110,8 @@ node.handle('execution-in', ctx => {
 });
 
 const NodeTemplate: ComponentStory<any> = () => <div style={{width: '100vw', height: '100vh'}}><Renderer initialize={e => {
-	e.addNode(_.cloneDeep(node), {x: 0, y: 0});
-	e.addNode(_.cloneDeep(node), {x: 600, y: 0});
-	e.addNode(_.cloneDeep(node), {x: 600, y: 400});
-
-	e.addNode(executionNode, {x: -400, y: 0});
+	e.addNode(executionNode, {x: 0, y: 0});
+	e.addNode(node, {x: 500, y: 0});
 	return e;
 }}/></div>;
 

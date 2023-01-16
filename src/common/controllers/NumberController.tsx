@@ -7,7 +7,7 @@ export class NumberController<T extends NumberValue<false>> extends Controller<T
 	override render(): React.FC {
 		return () => {
 			const [value, setValue] = React.useState(this.value.value);
-			return <Input value={value} type={'number'} onChange={v => {
+			return <Input value={value ?? 0} type={'number'} onChange={v => {
 				setValue(v.currentTarget.valueAsNumber);
 				this.update(new NumberValue<false>(v.currentTarget.valueAsNumber) as T);
 			}} {...this.props}/>;

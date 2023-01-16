@@ -1,14 +1,26 @@
-
-/* eslint-disable new-cap */
-
-import {Type} from 'class-transformer';
 import {NodeData} from './Node';
 import {type CoordinateExtent, type Position, type XYPosition, type Node} from 'reactflow';
 import {type CSSProperties} from 'react';
 import {type CustomNodeProps} from '../../components/reactflow/CustomNode';
+import {Type} from 'class-transformer';
 
-export class NodeWrapper<T extends NodeData> implements Node<T> {
-	@Type(() => NodeData) data: T;
+export class NodeWrapper implements Node<NodeData> {
+	static from(props: CustomNodeProps) {
+		return new NodeWrapper({
+			data: props.data,
+			id: props.id,
+			position: {
+				x: props.xPos,
+				y: props.yPos,
+			},
+			type: props.type,
+			selected: props.selected,
+			dragging: props.dragging,
+		});
+	}
+
+	// eslint-disable-next-line new-cap
+	@Type(() => NodeData) data: NodeData;
 	id: string;
 	position: XYPosition;
 	type?: string | undefined;
@@ -35,9 +47,10 @@ export class NodeWrapper<T extends NodeData> implements Node<T> {
 	focusable?: boolean | undefined;
 	resizing?: boolean | undefined;
 
-	constructor(props: CustomNodeProps) {
-		this.data = props.data as T;
-		this.id = props.id;
-		this.position = {x: props.xPos, y: props.yPos};
+	constructor(props: Node<NodeData>) {
+		this.data = props?.data ?? new NodeData('');
+		this.id = props?.id ?? '';
+		this.position = props.position;
+		this.type = 'custom';
 	}
 }

@@ -1,11 +1,10 @@
 import {Box, Flex} from '@mantine/core';
 import React from 'react';
-import {type NodeData} from '../common/classes/Node';
 import {type NodeWrapper} from '../common/classes/NodeWrapper';
 import NodeAttribute from './NodeAttribute';
 
 export type NodeBodyProps = {
-	node: NodeWrapper<NodeData>;
+	node: NodeWrapper;
 };
 
 export default function NodeBody(props: NodeBodyProps) {

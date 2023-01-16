@@ -3,7 +3,7 @@ import {IconCircle, IconQuestionCircle, IconCodeCircle2, IconArrowBadgeRight} fr
 import {type Port} from '../common/classes/Port';
 import {type Color} from '../types';
 import {useHover} from '@mantine/hooks';
-import {Box, Center, Tooltip, useMantineTheme} from '@mantine/core';
+import {Box, Center, Tooltip} from '@mantine/core';
 import {Handle, Position} from 'reactflow';
 import {type Attribute} from '../common/classes/Attribute';
 
@@ -33,7 +33,6 @@ export default function NodePort(props: PortProps) {
 
 	const {ref, hovered} = useHover();
 
-	const theme = useMantineTheme();
 	const isArray = props.port.datatype?.isArray;
 	const isNullable = props.port.nullable;
 	const datatypeLabel = `${props.port.datatype?.type ?? 'unknown'}${isNullable ? '?' : ''}${isArray ? '[]' : ''}`;
@@ -46,8 +45,8 @@ export default function NodePort(props: PortProps) {
 				left: '50%',
 				opacity: 0,
 				transform: 'translate(-50%, -50%)',
-				width: theme.spacing.xl,
-				height: theme.spacing.xl,
+				width: '100%',
+				height: '100%',
 
 			}} type={props.attribute.direction === 'input' ? 'target' : 'source'} id={props.attribute.name} position={props.attribute.direction === 'input' ? Position.Left : Position.Right} />
 			<Center>

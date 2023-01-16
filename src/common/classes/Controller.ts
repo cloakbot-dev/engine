@@ -3,6 +3,7 @@
 import {Type} from 'class-transformer';
 import React from 'react';
 import {type NonArrayDataType} from '../../types';
+import {NumberValue} from '../values/NumberValue';
 import {StringValue} from '../values/StringValue';
 import {Value} from './Value';
 
@@ -12,6 +13,7 @@ export class Controller<T extends NonArrayDataType, Props> {
 			property: '__type',
 			subTypes: [
 				{value: StringValue, name: 'StringValue'},
+				{value: NumberValue, name: 'NumberValue'},
 			],
 		},
 	}) value: T;

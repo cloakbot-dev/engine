@@ -23,6 +23,6 @@ export default function CustomNode(props: CustomNodeProps) {
 	}
 
 	return (
-		<NodeComponent node={new NodeWrapper(props)} selected={props.selected} dragging={props.dragging} />
+		<NodeComponent node={NodeWrapper.from(props)} selected={props.selected} dragging={props.dragging} />
 	);
 }

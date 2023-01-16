@@ -1,16 +1,14 @@
-import {Box, Flex, Text, useMantineTheme, Divider} from '@mantine/core';
+import {Box, Flex, Text, Divider} from '@mantine/core';
 import React from 'react';
-import {type NodeData} from '../common/classes/Node';
 import {type NodeWrapper} from '../common/classes/NodeWrapper';
 import useConnected from './hooks/useConnected';
 import NodePort from './NodePort';
 
 export type NodeHeaderProps = {
-	node: NodeWrapper<NodeData>;
+	node: NodeWrapper;
 };
 
 export default function NodeHeader(props: NodeHeaderProps) {
-	const theme = useMantineTheme();
 	return (
 		<Box w={'100%'} p={'md'} sx={theme => ({
 			background: theme.fn.linearGradient(20, props.node.data.color, theme.fn.rgba(props.node.data.color, 0.2)),
@@ -30,7 +28,7 @@ export default function NodeHeader(props: NodeHeaderProps) {
 					<Divider
 						sx={_ => ({flexGrow: 1})}
 						labelPosition={'center'}
-						color={theme.fn.rgba(props.node.data.accentColor, 0.5)}
+						color={props.node.data.accentColor}
 						label={<>
 							<Text fz={'xl'} color={props.node.data.accentColor}>
 								{props.node.data.label}

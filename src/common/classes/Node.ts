@@ -1,7 +1,7 @@
 /* eslint-disable new-cap */
 /* eslint-disable @typescript-eslint/member-ordering */
 /* eslint-disable @typescript-eslint/parameter-properties */
-import {Exclude, Type} from 'class-transformer';
+import {Exclude, plainToClass, Transform} from 'class-transformer';
 import _ from 'lodash';
 import {type Color, type DataType, type IO} from '../../types';
 import {type ExecutionContext} from '../Engine';
@@ -12,7 +12,16 @@ export class NodeData<Name extends Lowercase<string> = Lowercase<string>, Attrib
 	label: string;
 	color: Color = '#1062e6';
 	accentColor: Color = '#ffffff';
-	@Type(() => Attribute) attributes: Attributes;
+	@Transform(value => {
+		const map = new Map<string, Attribute<any>>();
+		for (const entry of Object.entries(value.value)) {
+			console.log(entry[1]);
+			map.set(entry[0], plainToClass(Attribute, entry[1]));
+		}
+
+		return map;
+	}, {toClassOnly: true}) attributes: Attributes;
+
 	@Exclude() handlers = new Map<string, (ctx: ExecutionContext) => void>();
 
 	readonly name: Name;

@@ -2,14 +2,13 @@ import {Box, Flex, Text} from '@mantine/core';
 import _ from 'lodash';
 import React from 'react';
 import {type Attribute} from '../common/classes/Attribute';
-import {type NodeData} from '../common/classes/Node';
 import {type NodeWrapper} from '../common/classes/NodeWrapper';
 import useConnected from './hooks/useConnected';
 import NodePort from './NodePort';
 
 export type NodeAttributeProps = {
 	attr: Attribute<any>;
-	node: NodeWrapper<NodeData>;
+	node: NodeWrapper;
 };
 
 export default function NodeAttribute(props: NodeAttributeProps) {
@@ -22,7 +21,7 @@ export default function NodeAttribute(props: NodeAttributeProps) {
 
 			<Flex direction={'row'} align={'center'} gap={'md'}>
 				<Text fz={'md'}>
-					{_.capitalize(props.attr.label)}
+					{props.attr.label}
 				</Text>
 				{
 					props.attr.controller === undefined ? null : <Box display={(connected && props.attr.direction === 'input') ? 'none' : 'inherit'}>

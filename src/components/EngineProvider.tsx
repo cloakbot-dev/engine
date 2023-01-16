@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+
 import {type ReactFlowProps} from '@reactflow/core';
 import React, {createContext, useState} from 'react';
 import {Engine} from '../common/Engine';
@@ -76,11 +76,13 @@ export const handleNodesChange = (changes: Parameters<NonNullable<ReactFlowProps
 	for (const change of changes) {
 		switch (change.type) {
 			case 'add':
-				engine.addNode(change.item.data, change.item.position, {
-					...change.item,
-					width: change.item.data.width ?? undefined,
-					height: change.item.data.height ?? undefined,
-				});
+				// Engine.addNode(change.item.data, change.item.position, {
+				// 	...change.item,
+				// 	width: change.item.data.width ?? undefined,
+				// 	height: change.item.data.height ?? undefined,
+				// });
+
+				engine.addNode((change.item.data), change.item.position, change.item as any);
 				break;
 			case 'remove':
 				engine.removeNode(change.id);

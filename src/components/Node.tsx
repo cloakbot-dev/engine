@@ -1,13 +1,12 @@
 import {Divider, Flex, Paper, Text} from '@mantine/core';
 import React, {useContext, useEffect, useRef} from 'react';
-import {type NodeData} from '../common/classes/Node';
 import {type NodeWrapper} from '../common/classes/NodeWrapper';
 import {engineContext} from './EngineProvider';
 import NodeBody from './NodeBody';
 import NodeHeader from './NodeHeader';
 
 export type NodeProps = {
-	node: NodeWrapper<NodeData>;
+	node: NodeWrapper;
 	dragging: boolean;
 	selected: boolean;
 };

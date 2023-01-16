@@ -1,16 +1,16 @@
+import {Button} from '@mantine/core';
 import {showNotification} from '@mantine/notifications';
 import React from 'react';
 import {Background, BackgroundVariant, ConnectionLineType, ReactFlow, type Edge} from 'reactflow';
-import {type NodeData} from '../common/classes/Node';
 import {type NodeWrapper} from '../common/classes/NodeWrapper';
 import {type Engine} from '../common/Engine';
 import {engineContext, handleConnection, handleEdgesChange, handleEdgeUpdate, handleNodesChange} from './EngineProvider';
 
 export type RendererProps = {
-	initialize?: (engine: Engine) => Engine;
+	initialize?: (engine: Engine) => Engine | Promise<Engine>;
 };
 
-function getNodes(engine: Engine): Array<NodeWrapper<NodeData>> {
+function getNodes(engine: Engine): NodeWrapper[] {
 	const arr = Array.from(engine.nodes.values());
 	return arr;
 }
@@ -44,16 +44,19 @@ export default function Renderer(props: RendererProps) {
 		throw new Error('No engine context found!');
 	}
 
-	const [nodes, setNodes] = React.useState < Array < NodeWrapper<NodeData>>>([]);
+	const [nodes, setNodes] = React.useState<NodeWrapper[]>([]);
 	const [edges, setEdges] = React.useState<Edge[]>([]);
 
 	const [initialized, setInitialized] = React.useState(false);
 	React.useEffect(() => {
-		if (props.initialize && !initialized) {
-			ctx.setEngine(props.initialize(ctx.engine));
-		}
+		(async () => {
+			if (props.initialize && !initialized) {
+				const e = await props.initialize(ctx.engine);
+				ctx.setEngine(e);
+			}
 
-		setInitialized(true);
+			setInitialized(true);
+		})();
 	}, []);
 
 	React.useEffect(() => {
@@ -82,39 +85,46 @@ export default function Renderer(props: RendererProps) {
 	};
 
 	return (
-		<ReactFlow {...ctx} nodes={nodes} edges={edges}
-			edgesFocusable={false}
-			defaultEdgeOptions={{
-				zIndex: 2000,
-				style: {
-					strokeLinecap: 'round',
-				},
-			}}
-			onNodesChange={c => {
-				ctx.setEngine(handleNodesChange(c, ctx.engine));
-			}}
-			onEdgesChange={c => {
-				ctx.setEngine(handleEdgesChange(c, ctx.engine));
-			}}
-			onConnect={c => {
-				ctx.setEngine(handleConnection(c, ctx.engine, showError));
-			}}
+		<>
+			<ReactFlow nodes={nodes} edges={edges}
+				edgesFocusable={false}
+				defaultEdgeOptions={{
+					zIndex: 2000,
+					style: {
+						strokeLinecap: 'round',
+					},
+				}}
+				onNodesChange={c => {
+					ctx.setEngine(handleNodesChange(c, ctx.engine));
+				}}
+				onEdgesChange={c => {
+					ctx.setEngine(handleEdgesChange(c, ctx.engine));
+				}}
+				onConnect={c => {
+					ctx.setEngine(handleConnection(c, ctx.engine, showError));
+				}}
 
-			onEdgeUpdate={(o, n) => {
-				ctx.setEngine(handleEdgeUpdate(o, n, ctx.engine, showError));
-			}}
+				onEdgeUpdate={(o, n) => {
+					ctx.setEngine(handleEdgeUpdate(o, n, ctx.engine, showError));
+				}}
 
-			edgeUpdaterRadius={10}
+				edgeUpdaterRadius={10}
 
-			connectionLineStyle={{
-				strokeWidth: 3,
-				strokeDasharray: '15 15',
-				opacity: 0.4,
-			}}
+				connectionLineStyle={{
+					strokeWidth: 3,
+					strokeDasharray: '15 15',
+					opacity: 0.4,
+				}}
 
-			connectionLineType={ConnectionLineType.Bezier}
-		>
-			<Background variant={BackgroundVariant.Cross} size={10} gap={ctx.backgroundGap} color={'#ffffff20'} />
-		</ReactFlow>
+				nodeTypes={ctx.nodeTypes}
+
+				connectionLineType={ConnectionLineType.Bezier}
+			>
+				<Button style={{zIndex: 10000}} m={'md'} onClick={() => {
+					console.log(ctx.engine.serialize());
+				}}>Log</Button>
+				<Background variant={BackgroundVariant.Cross} size={10} gap={ctx.backgroundGap} color={'#ffffff20'} />
+			</ReactFlow>
+		</>
 	);
 }

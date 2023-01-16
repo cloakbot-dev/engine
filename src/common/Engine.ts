@@ -1,14 +1,11 @@
-/* eslint-disable @typescript-eslint/consistent-type-assertions */
+import {NodeData} from './classes/Node';
 /* eslint-disable new-cap */
-import {type XYPosition} from 'reactflow';
-import {Exclude, instanceToPlain} from 'class-transformer';
-import {plainToInstance, Type} from 'class-transformer';
-import {type NodeData} from './classes/Node';
+import {Exclude, instanceToPlain, Transform} from 'class-transformer';
+import {plainToInstance} from 'class-transformer';
 import {type Connection} from '../types';
 import {v4} from 'uuid';
 import _ from 'lodash';
 import {NodeWrapper} from './classes/NodeWrapper';
-import {compress, decompress} from 'compressed-json';
 import {type Attribute} from './classes/Attribute';
 import {type Value} from './classes/Value';
 
@@ -28,11 +25,26 @@ export type EngineEvents = {
 
 export class Engine {
 	static load(string: string) {
-		return plainToInstance(Engine, decompress(JSON.parse(string)));
+		const e = plainToInstance(Engine, JSON.parse(string), {
+			enableImplicitConversion: true,
+		});
+		return e;
 	}
 
 	@Exclude() listeners = new Map<keyof EngineEvents, Array<EngineEvents[keyof EngineEvents]>>();
-	@Type(() => NodeWrapper<NodeData>) nodes = new Map<string, NodeWrapper<NodeData>>();
+	@Transform(value => {
+		const map = new Map<string, NodeWrapper>();
+		for (const entry of Object.entries(value.value)) {
+			(entry[1] as any).data = plainToInstance(NodeData, (entry[1] as any).data, {
+				enableImplicitConversion: true,
+			});
+
+			map.set(entry[0], new NodeWrapper(entry[1] as any));
+		}
+
+		return map;
+	}, {toClassOnly: true}) nodes = new Map<string, NodeWrapper>();
+
 	connections: Connection[] = [];
 
 	on<E extends keyof EngineEvents>(event: E, l: EngineEvents[E]) {
@@ -57,18 +69,17 @@ export class Engine {
 		return (name: string): Value<any> => {
 			let value: Value<any> | undefined;
 			const connection = this.connections.find(c => c.toId === nodeId && c.toPort === name);
-			if (connection) {
-				if (!ctx[connection.fromId]) {
-					throw new Error(`Could not find value for ${connection.fromId}.${connection.fromPort}, did you forget to execute it?`);
-				}
 
+			const targetAttribute = this.nodes.get(nodeId)?.data.attributes.get(name);
+
+			if (connection) {
 				value = ctx[connection.fromId][connection.fromPort];
 			} else {
 				const node = this.nodes.get(nodeId)!;
 				value = node.data.attributes.get(name)?.controller?.value as Value<any>;
 			}
 
-			if (!value) {
+			if (!value && !targetAttribute?.port?.nullable) {
 				throw new Error(`Could not find value for ${nodeId}.${name}`);
 			}
 
@@ -123,27 +134,25 @@ export class Engine {
 	}
 
 	serialize() {
-		const string = JSON.stringify(compress(instanceToPlain(this)));
+		const string = JSON.stringify(instanceToPlain(this, {
+			enableImplicitConversion: true,
+		}));
 		return (string);
 	}
 
-	addNode(node: NodeData, position: XYPosition, options?: Partial<Omit<NodeWrapper<NodeData>, 'data' | 'position'>>) {
-		const id = options?.id ?? v4();
+	addNode(node: NodeData, position: NodeWrapper['position'], options: Omit<Partial<NodeWrapper>, 'data' | 'position' > = {}) {
+		const id = options.id ?? v4();
 
 		node.attributes.forEach(a => {
 			a.nodeId = id;
 		});
 
-		this.nodes.set(id, {
-			id,
-			type: 'custom',
-			position: {
-				x: position.x,
-				y: position.y,
-			},
-			data: node,
+		this.nodes.set(id, new NodeWrapper({
 			...options,
-		});
+			data: _.cloneDeep(node),
+			position,
+			id,
+		}));
 
 		this.emit('node-added', id);
 
@@ -160,20 +169,15 @@ export class Engine {
 		this.emit('node-removed', id);
 	}
 
-	updateNode(id: string, change: Partial<Omit<NodeWrapper<NodeData>, 'id'>>) {
+	updateNode(id: string, change: Partial<Omit<NodeWrapper, 'id'>>) {
 		const node = this.nodes.get(id);
 		if (!node) {
 			throw new Error(`Node with id ${id} does not exist`);
 		}
 
-		this.nodes.set(id, {
-			...node,
-			...change,
-			data: {
-				...node.data,
-				...change.data,
-			} as NodeData,
-		});
+		const merged = _.merge(node, change);
+
+		this.nodes.set(id, merged);
 
 		this.emit('changed');
 	}
